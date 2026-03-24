@@ -343,6 +343,11 @@
                     <input type="checkbox" id="governmentOverseas" class="h-4 w-4 rounded text-pink-600">
                     <span>學生為<strong>政府派外人員子女</strong></span>
                   </label>
+                  <div id="governmentOverseasDetails" class="ml-6 mt-2 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">上傳相關證明文件 <span class="text-red-500">*</span></label>
+                    <input type="file" id="governmentOverseasFile" accept="image/*,application/pdf" class="w-full text-sm">
+                    <div id="governmentOverseasFilePreview" class="mt-2"></div>
+                  </div>
                 </div>
 
                 <!-- 外籍生 -->
@@ -354,8 +359,19 @@
                   <div id="foreignStudentDetails" class="ml-6 mt-2 space-y-3 hidden">
                     <div>
                       <label class="block text-sm font-medium text-gray-700 mb-1">學生國籍 <span class="text-red-500">*</span></label>
-                      <input type="text" id="foreignStudentNationality"
-                             class="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      <select id="foreignStudentNationality" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                        <option value="">請選擇國籍</option>
+                        <option>美國</option><option>加拿大</option><option>英國</option>
+                        <option>澳洲</option><option>紐西蘭</option><option>日本</option>
+                        <option>南韓</option><option>新加坡</option><option>馬來西亞</option>
+                        <option>印尼</option><option>越南</option><option>泰國</option>
+                        <option>菲律賓</option><option>柬埔寨</option><option>緬甸</option>
+                        <option>印度</option><option>巴基斯坦</option><option>埃及</option>
+                        <option>法國</option><option>德國</option><option>荷蘭</option>
+                        <option value="其他">其他（請填寫）</option>
+                      </select>
+                      <input type="text" id="foreignStudentNationalityOther"
+                             class="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm hidden"
                              placeholder="請填寫學生國籍">
                     </div>
                     <div>
@@ -500,7 +516,12 @@
     document.getElementById('overseas').addEventListener('change', function() { toggle('overseasDetails', this.checked); });
     document.getElementById('hongKongMacao').addEventListener('change', function() { toggle('hongKongMacaoDetails', this.checked); });
     document.getElementById('dualNationality').addEventListener('change', function() { toggle('dualNationalityDetails', this.checked); });
+    document.getElementById('governmentOverseas').addEventListener('change', function() { toggle('governmentOverseasDetails', this.checked); });
     document.getElementById('foreignStudent').addEventListener('change', function() { toggle('foreignStudentDetails', this.checked); });
+    document.getElementById('foreignStudentNationality').addEventListener('change', function() {
+      toggle('foreignStudentNationalityOther', this.value === '其他');
+      if (this.value !== '其他') document.getElementById('foreignStudentNationalityOther').value = '';
+    });
     document.getElementById('mainlandChina').addEventListener('change', function() { toggle('mainlandChinaDetails', this.checked); });
 
     document.getElementById('specialStatusForm').addEventListener('submit', handleSubmit);
@@ -635,12 +656,24 @@
 
         // 政府派外
         document.getElementById('governmentOverseas').checked = !!d.governmentOverseas;
+        if (d.governmentOverseas) {
+          toggle('governmentOverseasDetails', true);
+          if (d.governmentOverseasDocUrl) showExistingFile('governmentOverseasFilePreview', d.governmentOverseasDocUrl, '政府派外證明');
+        }
 
         // 外籍生
         document.getElementById('foreignStudent').checked = !!d.foreignStudent;
         if (d.foreignStudent) {
           toggle('foreignStudentDetails', true);
-          document.getElementById('foreignStudentNationality').value = d.foreignStudentNationality || '';
+          const sel = document.getElementById('foreignStudentNationality');
+          const nat = d.foreignStudentNationality || '';
+          const found = Array.from(sel.options).some(o => o.value === nat);
+          if (found) { sel.value = nat; }
+          else if (nat) {
+            sel.value = '其他';
+            document.getElementById('foreignStudentNationalityOther').value = nat;
+            toggle('foreignStudentNationalityOther', true);
+          }
           if (d.foreignStudentDocUrl) {
             toggle('foreignStudentDocArea', true);
             document.getElementById('foreignStudentLink').href = d.foreignStudentDocUrl;
@@ -716,9 +749,15 @@
       if (!document.getElementById('passport2File').files[0] && document.getElementById('passport2Link').href === location.href + '#')
         return showToast('請上傳第二本護照封面（外國護照）', 'error'), false;
     }
+    if (document.getElementById('governmentOverseas').checked) {
+      if (!document.getElementById('governmentOverseasFile').files[0] && !document.querySelector('#governmentOverseasFilePreview a'))
+        return showToast('請上傳政府派外人員子女相關證明', 'error'), false;
+    }
     if (document.getElementById('foreignStudent').checked) {
-      if (!document.getElementById('foreignStudentNationality').value.trim())
-        return showToast('請填寫外籍生國籍', 'error'), false;
+      const nat = document.getElementById('foreignStudentNationality').value;
+      if (!nat) return showToast('請選擇外籍生國籍', 'error'), false;
+      if (nat === '其他' && !document.getElementById('foreignStudentNationalityOther').value.trim())
+        return showToast('請填寫外籍生具體國籍', 'error'), false;
       if (!document.getElementById('foreignStudentFile').files[0] && !document.getElementById('foreignStudentDocArea').classList.contains('hidden') === false)
         return showToast('請上傳外籍生居留證', 'error'), false;
     }
@@ -769,7 +808,11 @@
       formData.secondNationality  = formData.dualNationality ? document.getElementById('secondNationality').value.trim() : '';
       formData.governmentOverseas = document.getElementById('governmentOverseas').checked;
       formData.foreignStudent     = document.getElementById('foreignStudent').checked;
-      formData.foreignStudentNationality = formData.foreignStudent ? document.getElementById('foreignStudentNationality').value.trim() : '';
+      if (formData.foreignStudent) {
+        const nat = document.getElementById('foreignStudentNationality').value;
+        formData.foreignStudentNationality = nat === '其他'
+          ? document.getElementById('foreignStudentNationalityOther').value.trim() : nat;
+      } else { formData.foreignStudentNationality = ''; }
       formData.mainlandChina      = document.getElementById('mainlandChina').checked;
     }
 
@@ -785,6 +828,7 @@
         { cond: formData.hongKongMacao   && !isNormal, id: 'hongKongMacaoFile',    key: 'hongKongMacaoDocUrl' },
         { cond: formData.dualNationality && !isNormal, id: 'passport1File',        key: 'passport1Url' },
         { cond: formData.dualNationality && !isNormal, id: 'passport2File',        key: 'passport2Url' },
+        { cond: formData.governmentOverseas && !isNormal, id: 'governmentOverseasFile', key: 'governmentOverseasDocUrl' },
         { cond: formData.foreignStudent  && !isNormal, id: 'foreignStudentFile',   key: 'foreignStudentDocUrl' },
         { cond: formData.mainlandChina   && !isNormal, id: 'mainlandChinaFile',    key: 'mainlandChinaDocUrl' },
       ];
