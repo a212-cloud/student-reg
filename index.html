@@ -269,7 +269,7 @@ async function handleLogin() {
       localStorage.setItem('userName', result.name);
       localStorage.setItem('sessionToken', result.sessionToken || '');
 
-      showMainSection();
+      showMainSection(result.dashboardData);
       return;
     }
     
@@ -300,28 +300,37 @@ async function handleLogin() {
 }
 
 // 顯示主要區段
-function showMainSection() {
+// prefetchedData: 登入時回傳的 dashboardData（可選，有則直接用，無則再打一次 API）
+function showMainSection(prefetchedData) {
   // 1. 切換區段顯示
   document.getElementById('loginSection').classList.add('hidden');
   document.getElementById('mainSection').classList.remove('hidden');
   document.getElementById('userName').textContent = currentUser.name;
-  
-  // 2. 初始化顯示
+
   const modulesGrid = document.getElementById('modulesGrid');
   const moduleLoadingIndicator = document.getElementById('moduleLoadingIndicator');
-  
+
+  function applyDashboard(result) {
+    if (result && result.permissions) studentPermissions = result.permissions;
+    renderModules();
+    if (result && result.status) updateModuleStatus(result.status);
+    moduleLoadingIndicator.classList.add('hidden');
+    modulesGrid.classList.remove('hidden');
+  }
+
+  // 2. 若登入時已帶回資料，直接套用（零額外 API）
+  if (prefetchedData && prefetchedData.status) {
+    modulesGrid.classList.add('hidden');
+    moduleLoadingIndicator.classList.remove('hidden');
+    applyDashboard(prefetchedData);
+    return;
+  }
+
+  // 3. 重新整理時從快取或 API 取得
   modulesGrid.classList.add('hidden');
   moduleLoadingIndicator.classList.remove('hidden');
-  
-  // 3. 一次 API 取得完成狀態 + 功能權限（含 60 秒快取）
   callAPI('getDashboardData', { idNumber: currentUser.idNumber })
-    .then(result => {
-      if (result && result.permissions) studentPermissions = result.permissions;
-      renderModules();
-      if (result && result.status) updateModuleStatus(result.status);
-      moduleLoadingIndicator.classList.add('hidden');
-      modulesGrid.classList.remove('hidden');
-    })
+    .then(applyDashboard)
     .catch(error => {
       console.error('載入使用者狀態失敗:', error);
       renderModules();
