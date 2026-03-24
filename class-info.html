@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- base tag removed: now served from GitHub Pages -->
+  <meta charset="UTF-8">
+  <title>班級查詢</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="min-h-screen bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <div class="max-w-2xl mx-auto">
+        <!-- 返回按鈕 -->
+        <button onclick="handleBack()" class="mb-4 inline-flex items-center text-blue-600 hover:text-blue-800">
+          <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          返回主選單
+        </button>
+
+        <!-- 主要資訊區塊 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-2xl font-bold text-center mb-6">班級查詢</h2>
+
+          <!-- 學生基本資料區塊 -->
+          <div class="p-4 bg-gray-50 rounded-lg mb-6">
+            <h3 class="font-bold text-gray-700 mb-3">學生基本資料</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">身分證字號</label>
+                <div id="userIdNumber" class="p-2 bg-gray-100 rounded border border-gray-300"></div>
+              </div>
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">姓名</label>
+                <div id="userName" class="p-2 bg-gray-100 rounded border border-gray-300"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 臨時編班資訊 -->
+          <div class="mb-6">
+            <div class="bg-yellow-50 rounded-lg p-4">
+              <h3 class="text-lg font-bold text-yellow-800 mb-3">臨時編班資訊 <span class="text-sm font-normal">(僅供新生入學測驗施測時使用)</span></h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-yellow-700 text-sm font-bold mb-2">臨時班級</label>
+                  <div id="tempClass" class="p-2 bg-white rounded border border-yellow-300"></div>
+                </div>
+                <div>
+                  <label class="block text-yellow-700 text-sm font-bold mb-2">臨時座號</label>
+                  <div id="tempSeat" class="p-2 bg-white rounded border border-yellow-300"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 正式編班資訊 -->
+          <div class="mb-6">
+            <div class="bg-red-50 rounded-lg p-4">
+              <h3 class="text-lg font-bold text-red-800 mb-3">正式編班資訊</h3>
+              <div id="officialClassInfo">
+                <!-- 這裡的內容會由 JavaScript 動態產生 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部返回連結 -->
+        <div class="mt-6 text-center">
+          <button onclick="handleBack()" 
+                  class="inline-flex items-center text-blue-600 hover:text-blue-800">
+            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            返回主選單
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== GAS API 設定 =====
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzVZZO75XMjmhpP8YQDrii75vq2K1JmvP3Zf0rbvICoijZDUS7vuUBi8ExcjP7QLaIKwg/exec';
+    async function callAPI(action, params) {
+      const res = await fetch(GAS_API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...params }),
+        redirect: 'follow'
+      });
+      if (!res.ok) throw new Error('網路錯誤 ' + res.status);
+      return res.json();
+    }
+    // ========================
+
+    // 全域變數
+    let currentUser = {
+      idNumber: '',
+      name: ''
+    };
+
+    // 頁面載入時執行
+    window.onload = function() {
+      checkLoginStatus();
+      loadClassInfo();
+    };
+
+    // 檢查登入狀態
+    function checkLoginStatus() {
+      currentUser.idNumber = localStorage.getItem('currentUser');
+      currentUser.name = localStorage.getItem('userName');
+      
+      if (!currentUser.idNumber || !currentUser.name) {
+        handleBack();
+        return;
+      }
+
+      // 顯示學生資料
+      document.getElementById('userIdNumber').textContent = currentUser.idNumber;
+      document.getElementById('userName').textContent = currentUser.name;
+    }
+
+    // 載入班級資訊
+    function loadClassInfo() {
+      callAPI('getDetailedClassInfo', { idNumber: currentUser.idNumber })
+        .then(function(result) {
+          if (result.success) {
+            // 更新臨時編班資訊
+            document.getElementById('tempClass').textContent = 
+              result.tempClass ? `${result.tempClass}班` : '尚未編班';
+            document.getElementById('tempSeat').textContent = 
+              result.tempSeat ? result.tempSeat : '尚未安排';
+
+            // 更新正式編班資訊
+            const officialClassInfo = document.getElementById('officialClassInfo');
+            
+            if (result.officialClass && result.officialSeat && result.teacher) {
+              officialClassInfo.innerHTML = `
+                <div class="grid grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-red-700 text-sm font-bold mb-2">正式班級</label>
+                    <div class="p-2 bg-white rounded border border-red-300">
+                      ${result.officialClass}班
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-red-700 text-sm font-bold mb-2">正式座號</label>
+                    <div class="p-2 bg-white rounded border border-red-300">
+                      ${result.officialSeat}
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-red-700 text-sm font-bold mb-2">導師姓名</label>
+                    <div class="p-2 bg-white rounded border border-red-300">
+                      ${result.teacher}
+                    </div>
+                  </div>
+                </div>
+              `;
+            } else {
+              officialClassInfo.innerHTML = `
+                <div class="p-4 bg-white rounded border border-red-300 text-center text-gray-600">
+                  尚未進行正式編班，請耐心等候
+                </div>
+              `;
+            }
+          } else {
+            alert(result.message || '載入班級資訊失敗');
+          }
+        })
+        .catch(function(error) {
+          alert('系統發生錯誤：' + error);
+        });
+    }
+
+    // 返回主選單
+    function handleBack() {
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

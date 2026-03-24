@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- base tag removed: now served from GitHub Pages -->
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google" content="notranslate">
+  <title>南崁國中新生系統</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <div class="min-h-screen bg-gray-100">
+    <!-- 登入區塊 -->
+    <div id="loginSection" class="container mx-auto px-4 py-8">
+      <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold text-center mb-6">南崁國中新生系統</h1>
+        
+<!-- 系統開放時間提示 
+<div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500">
+  <div class="text-base font-bold text-red-800">系統開放時間</div>
+  <div class="text-red-700 text-base font-semibold mt-1">
+    4/22 上午8:00 開放
+  </div>
+</div>
+-->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="idNumber">
+              身分證字號(首位英文字為大寫)
+            </label>
+            <input id="idNumber" type="text" 
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                   placeholder="請輸入身分證字號">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="birthDate">
+              出生年月日(西元年月日共八位數字，例如：19990708)
+            </label>
+            <input id="birthDate" type="password" 
+                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                   placeholder="格式：YYYYMMDD">
+          </div>
+          <div>
+            <button onclick="handleLogin()" 
+                    class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+              登入
+            </button>
+          </div>
+          <!-- 登入載入指示器 -->
+          <div id="loginLoadingIndicator" class="hidden mt-4">
+            <div class="flex justify-center items-center">
+              <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+              <span class="ml-2 text-blue-500 text-sm">處理中...</span>
+            </div>
+          </div>
+
+          <!-- 更顯眼的提示訊息 -->
+          <div class="mt-4 p-4 bg-yellow-50 rounded-lg border-2 border-yellow-400">
+            <div class="flex items-start space-x-2">
+              <svg class="w-6 h-6 text-yellow-600 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <div>
+                <p class="font-bold text-yellow-800 mb-1">重要提醒：</p>
+                <p class="text-yellow-700 text-sm leading-relaxed">
+                  本系統僅供<span class="font-bold">已完成報到手續</span>學生使用。<br>
+                  如果無法登入，代表<span class="text-red-600 font-bold">尚未完成報到手續</span><br>
+                  請逕洽註冊組(<span class="font-bold">03-3525590分機212</span>) 確認
+                  <br>
+                  本系統開放時間自<span class="text-red-600 font-bold text-lg">5/1上午8:00起</span><br>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 系統當前時間 -->
+          <div id="currentTimeDisplay" class="text-gray-600 text-sm text-center mt-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主要功能區 -->
+    <div id="mainSection" class="container mx-auto px-4 py-8 hidden">
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div class="flex flex-col space-y-4">
+            <!-- 歡迎標題與登出按鈕的容器 -->
+            <div class="flex items-center justify-between w-full">
+              <h2 class="text-2xl font-bold text-gray-800">歡迎回來，<span id="userName"></span></h2>
+              <button onclick="handleLogout()" 
+                      class="bg-red-500 hover:bg-red-600 text-white text-sm py-1 px-3 rounded">
+                登出
+              </button>
+            </div>
+            <div class="p-2 w-full">
+              <!-- 狀態資訊 -->
+              <div class="flex items-center space-x-3">
+                <svg class="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="flex-1">
+                  <div class="text-lg">
+                    <span class="text-blue-600 font-bold">登入後請完成各項資料的填寫及上傳：</span>
+                    <span class="text-red-500 font-bold">未完成為紅色</span>
+                    <span class="text-green-500 font-bold">已完成為綠色</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 截止日提醒 -->
+              <div class="flex items-center space-x-3 mt-2">
+                <svg class="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="flex-1">
+                  <div class="text-lg text-red-700 font-medium">
+                    請確保於<span class="font-bold underline decoration-2">新生訓練</span>前完成各項資料及文件的上傳
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 模組載入指示器 -->
+            <div id="moduleLoadingIndicator" class="hidden">
+              <div class="flex justify-center items-center p-8 bg-blue-50 rounded-lg">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <p class="ml-4 text-blue-600 font-medium">載入模組狀態中，請稍候...</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="modulesGrid">
+              <!-- 模組會由 JavaScript 動態產生 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+// ===== GAS API 設定 =====
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzVZZO75XMjmhpP8YQDrii75vq2K1JmvP3Zf0rbvICoijZDUS7vuUBi8ExcjP7QLaIKwg/exec'; // 部署 GAS 後填入 /exec 網址
+
+async function callAPI(action, params) {
+  const res = await fetch(GAS_API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action, ...params }),
+    redirect: 'follow'
+  });
+  if (!res.ok) throw new Error('網路錯誤 ' + res.status);
+  return res.json();
+}
+// ========================
+
+// 全域變數統一宣告
+const MAX_RECONNECT_ATTEMPTS = 3;
+const ERROR_COUNTS = {
+  login: 0,
+  module: 0
+};
+let currentUser = {
+  idNumber: '',
+  name: ''
+};
+let studentPermissions = null; // null = 全部顯示，object = 依設定過濾
+
+function getVisibleModules() {
+  if (!studentPermissions) return modules;
+  return modules.filter(m => studentPermissions[m.id] !== false);
+}
+
+// 更新系統時間顯示
+function updateCurrentTime() {
+  const timeDisplay = document.getElementById('currentTimeDisplay');
+  if (timeDisplay) {
+    const now = new Date();
+    timeDisplay.textContent = '系統當前時間：' + now.toLocaleString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  }
+}
+
+// 安全性相關函數
+function sanitizeInput(str) {
+  return str.replace(/[<>"'&]/g, '');
+}
+
+function resetErrorCount(type) {
+  ERROR_COUNTS[type] = 0;
+}
+
+function incrementErrorCount(type) {
+  ERROR_COUNTS[type]++;
+  return ERROR_COUNTS[type];
+}
+
+// 模組設定
+const modules = [
+  {
+    id: 'personal-info',
+    title: '基本個資填寫',
+    description: '填寫學生基本資料及聯絡方式'
+  },
+  {
+    id: 'special-status',
+    title: '特殊身份調查',
+    description: '填寫學生特殊身份及上傳相關證明文件'
+  },
+  {
+    id: 'photo-upload',
+    title: '學生卡照片上傳',
+    description: '上傳證件照片'
+  },
+  {
+    id: 'bank-info',
+    title: '存褶資料上傳',
+    description: '上傳郵局或銀行存摺封面照片'
+  },
+  {
+    id: 'class-info',
+    title: '班級查詢',
+    description: '查詢入學測驗及正式編班結果'
+  }
+];
+
+// 處理登入函數
+async function handleLogin() {
+  const idNumber = sanitizeInput(document.getElementById('idNumber').value);
+  const birthDate = sanitizeInput(document.getElementById('birthDate').value);
+  
+  if (!idNumber || !birthDate) {
+    alert('請填寫完整的登入資訊');
+    return;
+  }
+  
+  const loginBtn = document.querySelector('button[onclick="handleLogin()"]');
+  const loadingIndicator = document.getElementById('loginLoadingIndicator');
+  
+  try {
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<span class="animate-pulse">登入中...</span>';
+    loadingIndicator.classList.remove('hidden');
+    
+    const result = await callAPI('validateLogin', { idNumber, birthDate });
+
+    if (result.success) {
+      resetErrorCount('login');
+      currentUser.idNumber = idNumber;
+      currentUser.name = result.name;
+      localStorage.setItem('currentUser', idNumber);
+      localStorage.setItem('userName', result.name);
+      
+      showMainSection();
+      return;
+    }
+    
+    throw new Error(result.message || '登入失敗');
+    
+  } catch (error) {
+    console.error('登入錯誤:', error);
+    const errorCount = incrementErrorCount('login');
+    
+    let errorMessage = error.message;
+    if (error.message === '連線逾時') {
+      errorMessage = '系統連線逾時，請確認網路狀態後重試';
+    } else if (!error.message || error.message.includes('Script error')) {
+      errorMessage = '系統暫時無法連線，請稍後重試';
+    }
+    
+    if (errorCount >= 3) {
+      errorMessage += '\n建議清除瀏覽器快取後再試。';
+    }
+    
+    alert(errorMessage);
+    
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = '登入';
+    loadingIndicator.classList.add('hidden');
+  }
+}
+
+// 載入使用者狀態
+function loadUserStatus() {
+  if (!currentUser.idNumber) return Promise.resolve(null);
+  return callAPI('getBatchCompletionStatus', { idNumber: currentUser.idNumber });
+}
+
+// 顯示主要區段
+function showMainSection() {
+  // 1. 切換區段顯示
+  document.getElementById('loginSection').classList.add('hidden');
+  document.getElementById('mainSection').classList.remove('hidden');
+  document.getElementById('userName').textContent = currentUser.name;
+  
+  // 2. 初始化顯示
+  const modulesGrid = document.getElementById('modulesGrid');
+  const moduleLoadingIndicator = document.getElementById('moduleLoadingIndicator');
+  
+  modulesGrid.classList.add('hidden');
+  moduleLoadingIndicator.classList.remove('hidden');
+  
+  // 3. 同時載入功能權限 + 完成狀態
+  const permissionsPromise = callAPI('getStudentPermissions', { idNumber: currentUser.idNumber })
+    .then(res => { studentPermissions = (res && res.permissions) ? res.permissions : null; })
+    .catch(() => {});
+
+  Promise.all([loadUserStatus(), permissionsPromise])
+    .then(([status]) => {
+      renderModules();
+      if (status) updateModuleStatus(status);
+      moduleLoadingIndicator.classList.add('hidden');
+      modulesGrid.classList.remove('hidden');
+    })
+    .catch(error => {
+      console.error('載入使用者狀態失敗:', error);
+      renderModules();
+      moduleLoadingIndicator.classList.add('hidden');
+      modulesGrid.classList.remove('hidden');
+      alert('載入狀態失敗，請重新整理頁面');
+    });
+}
+
+// 渲染模組
+function renderModules() {
+  const container = document.getElementById('modulesGrid');
+  const fragment = document.createDocumentFragment();
+
+  getVisibleModules().forEach(module => {
+    const moduleDiv = document.createElement('div');
+    moduleDiv.id = `module-${module.id}`;
+    moduleDiv.className = 'bg-gray-50 rounded-lg shadow-md p-6 border-l-4 border-gray-300 transition-all duration-200';
+    
+    moduleDiv.innerHTML = `
+      <div class="animate-pulse">
+        <h3 class="text-lg font-bold mb-2">${module.title}</h3>
+        <p class="text-gray-600 mb-4">${module.description}</p>
+        <div class="bg-gray-200 h-10 rounded w-28"></div>
+      </div>
+    `;
+    
+    fragment.appendChild(moduleDiv);
+  });
+  
+  container.innerHTML = '';
+  container.appendChild(fragment);
+}
+
+// 更新模組狀態
+function updateModuleStatus(status) {
+  console.log('更新模組狀態:', status);
+
+  getVisibleModules().forEach(module => {
+    const moduleElement = document.getElementById(`module-${module.id}`);
+    if (!moduleElement) return;
+    
+    // 依據模組類型設定按鈕文字
+    const buttonText = module.id === 'class-info' ? '進入查看' : '進入填寫';
+    
+    // 移除加載動畫並設置實際內容
+    moduleElement.innerHTML = `
+      <h3 class="text-lg font-bold mb-2">${module.title}</h3>
+      <p class="text-gray-600 mb-4">${module.description}</p>
+      <button onclick="handleModuleClick('${module.id}')" 
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        ${buttonText}
+      </button>
+    `;
+    
+    // 移除所有可能的狀態類別
+    moduleElement.classList.remove(
+      'border-gray-300', 
+      'border-green-500', 
+      'border-red-500',
+      'bg-white', 
+      'bg-gray-50', 
+      'bg-green-50', 
+      'bg-red-50'
+    );
+    
+    // 根據完成狀態設置顏色
+    if (status && status[module.id]) {
+      moduleElement.classList.add('border-green-500', 'bg-green-50');
+    } else {
+      moduleElement.classList.add('border-red-500', 'bg-red-50');
+    }
+  });
+}
+
+// 處理模組點擊
+async function handleModuleClick(moduleId) {
+  const moduleBtn = document.querySelector(`#module-${moduleId} button`);
+  moduleBtn.disabled = true;
+  moduleBtn.innerHTML = `
+    <svg class="animate-spin h-5 w-5 mr-2 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>載入中...`;
+
+  window.location.href = moduleId + '.html';
+}
+
+// 登出處理
+function handleLogout() {
+  localStorage.removeItem('currentUser');
+  localStorage.removeItem('userName');
+
+  currentUser = { idNumber: '', name: '' };
+  studentPermissions = null;
+  
+  document.getElementById('loginSection').classList.remove('hidden');
+  document.getElementById('mainSection').classList.add('hidden');
+  
+  document.getElementById('idNumber').value = '';
+  document.getElementById('birthDate').value = '';
+}
+
+// 檢查登入狀態
+function checkLoginStatus() {
+  const savedUser = localStorage.getItem('currentUser');
+  const savedName = localStorage.getItem('userName');
+  
+  if (savedUser && savedName) {
+    currentUser.idNumber = savedUser;
+    currentUser.name = savedName;
+    showMainSection();
+  }
+}
+
+// 設定定時更新系統時間
+setInterval(updateCurrentTime, 1000);
+
+// 頁面載入時檢查登入狀態和初始化時間顯示
+window.onload = function() {
+  checkLoginStatus();
+  updateCurrentTime();
+};
+</script>
+</body>
+</html>

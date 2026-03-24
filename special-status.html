@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- base tag removed: now served from GitHub Pages -->
+  <meta charset="UTF-8">
+  <title>特殊身份調查 - 南崁國中新生資料系統</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <style>
+    .toast {
+      position: fixed; top: 1rem; right: 1rem; padding: 1rem;
+      background: #4CAF50; color: white; border-radius: 0.375rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000;
+      display: flex; align-items: center;
+      animation: slideIn 0.3s ease-out forwards;
+    }
+    .toast svg { width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; }
+    @keyframes slideIn {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    #specialSections.disabled { opacity: 0.4; pointer-events: none; }
+  </style>
+</head>
+<body>
+<div class="min-h-screen bg-gray-100">
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+
+      <button onclick="handleBack()" class="mb-4 inline-flex items-center text-blue-600 hover:text-blue-800">
+        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>返回主選單
+      </button>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-center mb-6">特殊身份調查</h2>
+
+        <!-- 基本資料 -->
+        <div class="p-4 bg-blue-50 rounded-lg mb-6 border-l-4 border-blue-500">
+          <h3 class="font-bold text-blue-800 mb-3">基本資料</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-gray-700 text-sm font-bold mb-1">身分證字號</label>
+              <div id="userIdNumber" class="p-2 bg-white rounded border border-gray-300 text-sm"></div>
+            </div>
+            <div>
+              <label class="block text-gray-700 text-sm font-bold mb-1">姓名</label>
+              <div id="userName" class="p-2 bg-white rounded border border-gray-300 text-sm"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 載入中 -->
+        <div id="loadingMessage" class="hidden text-center py-4">
+          <div class="inline-flex items-center px-4 py-2 font-semibold text-blue-500">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>載入中...
+          </div>
+        </div>
+
+        <!-- 重要提示 -->
+        <div class="p-4 bg-yellow-50 rounded-lg mb-6 border-l-4 border-yellow-500">
+          <p class="font-bold text-yellow-800 mb-2">📌 重要提醒</p>
+          <ul class="list-disc ml-5 text-yellow-800 space-y-1 text-sm">
+            <li>請依學生實際身份勾選，並<strong>上傳相關證明文件照片</strong>以利建檔</li>
+            <li>線上填寫僅供<strong>預先建檔</strong>，<strong>新生入學測驗當天務必攜帶正本</strong>繳交導師</li>
+            <li>未攜帶正本者，將無法辦理各項獎學金及補助申請</li>
+            <li>里長開立的清寒證明<strong>無法認列</strong>，須為縣市政府開立之正式證明</li>
+          </ul>
+        </div>
+
+        <form id="specialStatusForm" class="space-y-5">
+
+          <!-- 一般生 -->
+          <div class="p-4 bg-gray-50 rounded-lg border-2 border-gray-300">
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" id="isNormal" class="h-5 w-5 rounded">
+              <span class="font-bold text-gray-700">✅ 本生<strong>無</strong>以下任何特殊身份（一般生）</span>
+            </label>
+            <p class="text-gray-500 text-xs mt-1 ml-8">勾選此項後，以下欄位將自動略過。</p>
+          </div>
+
+          <div id="specialSections" class="space-y-5">
+
+            <!-- 一、低/中低收入戶 -->
+            <div class="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+              <h4 class="font-bold text-green-800 mb-3">💰 一、低收入戶 / 中低收入戶</h4>
+              <div class="space-y-3">
+                <p class="text-sm text-gray-600 mb-1">請選擇一項（兩者互斥）：</p>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="radio" name="incomeType" id="lowIncome" value="low" class="h-4 w-4 text-green-600">
+                  <span>區公所列冊之<strong>低收入戶</strong></span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="radio" name="incomeType" id="middleLowIncome" value="middleLow" class="h-4 w-4 text-green-600">
+                  <span>區公所列冊之<strong>中低收入戶</strong></span>
+                </label>
+                <div id="incomeUploadArea" class="hidden mt-2 ml-2">
+                  <div class="p-3 bg-red-50 rounded border border-red-200 mb-3 text-sm">
+                    <p class="font-bold text-red-700">⚠️ 重要</p>
+                    <ul class="list-disc ml-4 text-red-600 mt-1 space-y-1">
+                      <li>請上傳<strong>縣市政府開立</strong>之低/中低收入戶證明（里長清寒證明無效）</li>
+                      <li>入學測驗時務必攜帶<strong>正本</strong>到校，方可辦理獎學金業務</li>
+                    </ul>
+                  </div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">上傳低/中低收入戶證明 <span class="text-red-500">*</span></label>
+                  <input type="file" id="incomeFile" accept="image/*,application/pdf" class="w-full text-sm">
+                  <div id="incomeFilePreview" class="mt-2"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 二、原住民 -->
+            <div class="p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500">
+              <h4 class="font-bold text-indigo-800 mb-3">🏔️ 二、原住民</h4>
+              <label class="flex items-center space-x-3 cursor-pointer">
+                <input type="checkbox" id="aboriginal" class="h-4 w-4 rounded text-indigo-600">
+                <span>學生為<strong>原住民</strong></span>
+              </label>
+              <div id="aboriginalDetails" class="ml-6 mt-3 space-y-3 hidden">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">族別 <span class="text-red-500">*</span></label>
+                  <select id="aboriginalType" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                    <option value="">請選擇族別</option>
+                    <option>阿美族</option><option>排灣族</option><option>泰雅族</option>
+                    <option>布農族</option><option>太魯閣族</option><option>卑南族</option>
+                    <option>魯凱族</option><option>賽德克族</option><option>鄒族</option>
+                    <option>賽夏族</option><option>雅美族（達悟族）</option><option>噶瑪蘭族</option>
+                    <option>撒奇萊雅族</option><option>邵族</option>
+                    <option>拉阿魯哇族</option><option>卡那卡那富族</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    上傳戶口名簿影本 <span class="text-red-500">*</span>
+                    <span class="text-gray-500 font-normal text-xs ml-1">（需清楚顯示原住民身份，不得以戶籍謄本代替）</span>
+                  </label>
+                  <input type="file" id="aboriginalFile" accept="image/*" class="w-full text-sm">
+                  <div id="aboriginalFilePreview" class="mt-2"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 三、身心障礙 -->
+            <div class="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+              <h4 class="font-bold text-purple-800 mb-3">♿ 三、身心障礙身份</h4>
+              <div class="space-y-5">
+
+                <!-- 學生 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="disabilityStudent" class="h-4 w-4 rounded text-purple-600">
+                    <span>學生<strong>本人</strong>為身心障礙者</span>
+                  </label>
+                  <div id="disabilityStudentDetails" class="ml-6 mt-3 space-y-3 hidden">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">障礙等級 <span class="text-red-500">*</span></label>
+                      <select id="studentDisabilityLevel" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                        <option value="">請選擇障礙等級</option>
+                        <option>輕度</option><option>中度</option><option>中重度</option>
+                        <option>重度</option><option>極重度</option><option>不分級</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">障礙類別 <span class="text-red-500">*</span></label>
+                      <input type="text" id="studentDisabilityType"
+                             class="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                             placeholder="例：肢體障礙、智能障礙、視覺障礙、自閉症…">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        上傳身心障礙手冊 <span class="text-red-500">*</span>
+                        <span class="text-gray-500 font-normal text-xs ml-1">（正反面印在 A4 同一頁）</span>
+                      </label>
+                      <input type="file" id="studentDisabilityFile" accept="image/*" class="w-full text-sm">
+                      <div id="studentDisabilityDocArea" class="hidden mt-2">
+                        <a id="studentDisabilityLink" href="#" target="_blank" class="text-blue-600 text-sm">📄 查看已上傳的證明文件</a>
+                        <p class="text-yellow-600 text-xs mt-1">※ 如需更新，請重新上傳</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <hr class="border-purple-200">
+
+                <!-- 家長 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="disabilityParent" class="h-4 w-4 rounded text-purple-600">
+                    <span><strong>家長</strong>為身心障礙者</span>
+                  </label>
+                  <div id="disabilityParentDetails" class="ml-6 mt-3 space-y-3 hidden">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">障礙等級 <span class="text-red-500">*</span></label>
+                      <select id="parentDisabilityLevel" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                        <option value="">請選擇障礙等級</option>
+                        <option>輕度</option><option>中度</option><option>中重度</option>
+                        <option>重度</option><option>極重度</option><option>不分級</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">障礙類別 <span class="text-red-500">*</span></label>
+                      <input type="text" id="parentDisabilityType"
+                             class="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                             placeholder="例：肢體障礙、智能障礙、視覺障礙、自閉症…">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                        上傳身心障礙手冊 <span class="text-red-500">*</span>
+                        <span class="text-gray-500 font-normal text-xs ml-1">（正反面印在 A4 同一頁）</span>
+                      </label>
+                      <input type="file" id="parentDisabilityFile" accept="image/*" class="w-full text-sm">
+                      <div id="parentDisabilityDocArea" class="hidden mt-2">
+                        <a id="parentDisabilityLink" href="#" target="_blank" class="text-blue-600 text-sm">📄 查看已上傳的證明文件</a>
+                        <p class="text-yellow-600 text-xs mt-1">※ 如需更新，請重新上傳</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 四、外籍配偶子女 -->
+            <div class="p-4 bg-red-50 rounded-lg border-l-4 border-red-500">
+              <h4 class="font-bold text-red-800 mb-3">🌏 四、外籍配偶子女（新住民子女）</h4>
+              <div class="space-y-4">
+
+                <!-- 父親 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="foreignFather" class="h-4 w-4 rounded text-red-600">
+                    <span><strong>父親</strong>為外籍配偶</span>
+                  </label>
+                  <div id="foreignFatherDetails" class="ml-6 mt-2 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">父親國籍 <span class="text-red-500">*</span></label>
+                    <select id="foreignFatherNationality" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                      <option value="">請選擇國籍</option>
+                      <option>中國（大陸）</option><option>港澳（香港/澳門）</option>
+                      <option>越南</option><option>印尼</option><option>泰國</option>
+                      <option>菲律賓</option><option>柬埔寨</option><option>馬來西亞</option>
+                      <option>緬甸</option><option>南韓</option><option>新加坡</option>
+                      <option>日本</option><option>美國</option><option>加拿大</option>
+                      <option>澳洲</option><option>埃及</option><option>巴基斯坦</option>
+                      <option value="其他">其他（請填寫）</option>
+                    </select>
+                    <input type="text" id="foreignFatherNationalityOther"
+                           class="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm hidden"
+                           placeholder="請填寫父親國籍">
+                  </div>
+                </div>
+
+                <!-- 母親 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="foreignMother" class="h-4 w-4 rounded text-red-600">
+                    <span><strong>母親</strong>為外籍配偶</span>
+                  </label>
+                  <div id="foreignMotherDetails" class="ml-6 mt-2 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">母親國籍 <span class="text-red-500">*</span></label>
+                    <select id="foreignMotherNationality" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                      <option value="">請選擇國籍</option>
+                      <option>中國（大陸）</option><option>港澳（香港/澳門）</option>
+                      <option>越南</option><option>印尼</option><option>泰國</option>
+                      <option>菲律賓</option><option>柬埔寨</option><option>馬來西亞</option>
+                      <option>緬甸</option><option>南韓</option><option>新加坡</option>
+                      <option>日本</option><option>美國</option><option>加拿大</option>
+                      <option>澳洲</option><option>埃及</option><option>巴基斯坦</option>
+                      <option value="其他">其他（請填寫）</option>
+                    </select>
+                    <input type="text" id="foreignMotherNationalityOther"
+                           class="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm hidden"
+                           placeholder="請填寫母親國籍">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 五、其他身份 -->
+            <div class="p-4 bg-pink-50 rounded-lg border-l-4 border-pink-500">
+              <h4 class="font-bold text-pink-800 mb-3">📋 五、其他特殊身份</h4>
+              <div class="space-y-5">
+
+                <!-- 僑生 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="overseas" class="h-4 w-4 rounded text-pink-600">
+                    <span>學生為<strong>僑生</strong></span>
+                  </label>
+                  <div id="overseasDetails" class="ml-6 mt-2 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">上傳僑委會核准公文或證明 <span class="text-red-500">*</span></label>
+                    <input type="file" id="overseasFile" accept="image/*,application/pdf" class="w-full text-sm">
+                    <div id="overseasFilePreview" class="mt-2"></div>
+                  </div>
+                </div>
+
+                <!-- 港澳生 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="hongKongMacao" class="h-4 w-4 rounded text-pink-600">
+                    <span>學生為<strong>港澳生</strong></span>
+                  </label>
+                  <div id="hongKongMacaoDetails" class="ml-6 mt-2 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">上傳居留證或護照照片 <span class="text-red-500">*</span></label>
+                    <input type="file" id="hongKongMacaoFile" accept="image/*" class="w-full text-sm">
+                    <div id="hongKongMacaoFilePreview" class="mt-2"></div>
+                  </div>
+                </div>
+
+                <!-- 雙重國籍 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="dualNationality" class="h-4 w-4 rounded text-pink-600">
+                    <span>學生具<strong>雙重國籍</strong></span>
+                  </label>
+                  <div id="dualNationalityDetails" class="ml-6 mt-3 space-y-3 hidden">
+                    <p class="text-sm text-gray-600">請上傳兩本護照封面照片，並填寫第二國籍</p>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">第一本護照封面（中華民國護照）<span class="text-red-500">*</span></label>
+                      <input type="file" id="passport1File" accept="image/*" class="w-full text-sm">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">第二本護照封面（外國護照）<span class="text-red-500">*</span></label>
+                      <input type="file" id="passport2File" accept="image/*" class="w-full text-sm">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">第二國籍 <span class="text-red-500">*</span></label>
+                      <input type="text" id="secondNationality"
+                             class="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                             placeholder="請填寫第二國籍國家名稱">
+                    </div>
+                    <div id="dualNationalityDocArea" class="hidden">
+                      <a id="passport1Link" href="#" target="_blank" class="text-blue-600 text-sm block">📄 查看已上傳的護照1</a>
+                      <a id="passport2Link" href="#" target="_blank" class="text-blue-600 text-sm block mt-1">📄 查看已上傳的護照2</a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 政府派外 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="governmentOverseas" class="h-4 w-4 rounded text-pink-600">
+                    <span>學生為<strong>政府派外人員子女</strong></span>
+                  </label>
+                </div>
+
+                <!-- 外籍生 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="foreignStudent" class="h-4 w-4 rounded text-pink-600">
+                    <span>學生為<strong>外籍生</strong></span>
+                  </label>
+                  <div id="foreignStudentDetails" class="ml-6 mt-2 space-y-3 hidden">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">學生國籍 <span class="text-red-500">*</span></label>
+                      <input type="text" id="foreignStudentNationality"
+                             class="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                             placeholder="請填寫學生國籍">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">上傳居留證照片 <span class="text-red-500">*</span></label>
+                      <input type="file" id="foreignStudentFile" accept="image/*" class="w-full text-sm">
+                      <div id="foreignStudentDocArea" class="hidden mt-2">
+                        <a id="foreignStudentLink" href="#" target="_blank" class="text-blue-600 text-sm">📄 查看已上傳的居留證</a>
+                        <p class="text-yellow-600 text-xs mt-1">※ 如需更新，請重新上傳</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 大陸來台依親 -->
+                <div>
+                  <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="mainlandChina" class="h-4 w-4 rounded text-pink-600">
+                    <span>學生為<strong>大陸來台依親</strong></span>
+                  </label>
+                  <div id="mainlandChinaDetails" class="ml-6 mt-2 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">上傳居留證或護照照片 <span class="text-red-500">*</span></label>
+                    <input type="file" id="mainlandChinaFile" accept="image/*" class="w-full text-sm">
+                    <div id="mainlandChinaDocArea" class="hidden mt-2">
+                      <a id="mainlandChinaLink" href="#" target="_blank" class="text-blue-600 text-sm">📄 查看已上傳的居留證/護照</a>
+                      <p class="text-yellow-600 text-xs mt-1">※ 如需更新，請重新上傳</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div><!-- /specialSections -->
+
+          <!-- 按鈕 -->
+          <div class="flex justify-between pt-6">
+            <button type="button" onclick="handleBack()"
+                    class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+              返回
+            </button>
+            <button type="submit" id="submitButton"
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+              儲存資料
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== GAS API 設定 =====
+  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzVZZO75XMjmhpP8YQDrii75vq2K1JmvP3Zf0rbvICoijZDUS7vuUBi8ExcjP7QLaIKwg/exec';
+  async function callAPI(action, params) {
+    const res = await fetch(GAS_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action, ...params }),
+      redirect: 'follow'
+    });
+    if (!res.ok) throw new Error('網路錯誤 ' + res.status);
+    return res.json();
+  }
+  // ========================
+
+  let currentUser = { idNumber: '', name: '' };
+
+  window.onload = function() {
+    checkLoginStatus();
+    setupEventListeners();
+    loadExistingData();
+  };
+
+  function checkLoginStatus() {
+    currentUser.idNumber = localStorage.getItem('currentUser');
+    currentUser.name = localStorage.getItem('userName');
+    if (!currentUser.idNumber || !currentUser.name) { handleBack(); return; }
+    document.getElementById('userIdNumber').textContent = currentUser.idNumber;
+    document.getElementById('userName').textContent = currentUser.name;
+  }
+
+  function toggle(id, show) {
+    document.getElementById(id).classList.toggle('hidden', !show);
+  }
+
+  function setupEventListeners() {
+    // 一般生
+    document.getElementById('isNormal').addEventListener('change', function() {
+      document.getElementById('specialSections').classList.toggle('disabled', this.checked);
+    });
+
+    // 低/中低收入戶（互斥 radio）
+    document.querySelectorAll('input[name="incomeType"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        toggle('incomeUploadArea', true);
+      });
+    });
+
+    // 原住民
+    document.getElementById('aboriginal').addEventListener('change', function() {
+      toggle('aboriginalDetails', this.checked);
+    });
+
+    // 身心障礙
+    document.getElementById('disabilityStudent').addEventListener('change', function() {
+      toggle('disabilityStudentDetails', this.checked);
+    });
+    document.getElementById('disabilityParent').addEventListener('change', function() {
+      toggle('disabilityParentDetails', this.checked);
+    });
+
+    // 外籍父
+    document.getElementById('foreignFather').addEventListener('change', function() {
+      toggle('foreignFatherDetails', this.checked);
+    });
+    document.getElementById('foreignFatherNationality').addEventListener('change', function() {
+      toggle('foreignFatherNationalityOther', this.value === '其他');
+      if (this.value !== '其他') document.getElementById('foreignFatherNationalityOther').value = '';
+    });
+
+    // 外籍母
+    document.getElementById('foreignMother').addEventListener('change', function() {
+      toggle('foreignMotherDetails', this.checked);
+    });
+    document.getElementById('foreignMotherNationality').addEventListener('change', function() {
+      toggle('foreignMotherNationalityOther', this.value === '其他');
+      if (this.value !== '其他') document.getElementById('foreignMotherNationalityOther').value = '';
+    });
+
+    // 其他身份
+    document.getElementById('overseas').addEventListener('change', function() { toggle('overseasDetails', this.checked); });
+    document.getElementById('hongKongMacao').addEventListener('change', function() { toggle('hongKongMacaoDetails', this.checked); });
+    document.getElementById('dualNationality').addEventListener('change', function() { toggle('dualNationalityDetails', this.checked); });
+    document.getElementById('foreignStudent').addEventListener('change', function() { toggle('foreignStudentDetails', this.checked); });
+    document.getElementById('mainlandChina').addEventListener('change', function() { toggle('mainlandChinaDetails', this.checked); });
+
+    document.getElementById('specialStatusForm').addEventListener('submit', handleSubmit);
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function showExistingFile(previewId, url, label) {
+    document.getElementById(previewId).innerHTML =
+      `<a href="${url}" target="_blank" class="text-blue-600 text-sm">📄 查看${label}</a>
+       <p class="text-yellow-600 text-xs mt-1">※ 如需更新，請重新上傳</p>`;
+  }
+
+  function loadExistingData() {
+    document.getElementById('loadingMessage').classList.remove('hidden');
+    callAPI('getSpecialStatus', { idNumber: currentUser.idNumber })
+      .then(function(res) {
+        document.getElementById('loadingMessage').classList.add('hidden');
+        if (!res.success || !res.data) return;
+        const d = res.data;
+
+        if (d.isNormal) {
+          document.getElementById('isNormal').checked = true;
+          document.getElementById('specialSections').classList.add('disabled');
+        }
+
+        // 低/中低（互斥）
+        if (d.lowIncome) {
+          document.getElementById('lowIncome').checked = true;
+          toggle('incomeUploadArea', true);
+          if (d.incomeDocUrl) showExistingFile('incomeFilePreview', d.incomeDocUrl, '低收入戶證明');
+        } else if (d.middleLowIncome) {
+          document.getElementById('middleLowIncome').checked = true;
+          toggle('incomeUploadArea', true);
+          if (d.incomeDocUrl) showExistingFile('incomeFilePreview', d.incomeDocUrl, '中低收入戶證明');
+        }
+
+        // 原住民
+        document.getElementById('aboriginal').checked = !!d.aboriginal;
+        if (d.aboriginal) {
+          toggle('aboriginalDetails', true);
+          document.getElementById('aboriginalType').value = d.aboriginalType || '';
+          if (d.aboriginalFileUrl) showExistingFile('aboriginalFilePreview', d.aboriginalFileUrl, '戶口名簿');
+        }
+
+        // 學生身心障礙
+        document.getElementById('disabilityStudent').checked = !!d.disabilityStudent;
+        if (d.disabilityStudent) {
+          toggle('disabilityStudentDetails', true);
+          document.getElementById('studentDisabilityLevel').value = d.studentDisabilityLevel || '';
+          document.getElementById('studentDisabilityType').value = d.studentDisabilityType || '';
+          if (d.studentDisabilityUrl) {
+            toggle('studentDisabilityDocArea', true);
+            document.getElementById('studentDisabilityLink').href = d.studentDisabilityUrl;
+          }
+        }
+
+        // 家長身心障礙
+        document.getElementById('disabilityParent').checked = !!d.disabilityParent;
+        if (d.disabilityParent) {
+          toggle('disabilityParentDetails', true);
+          document.getElementById('parentDisabilityLevel').value = d.parentDisabilityLevel || '';
+          document.getElementById('parentDisabilityType').value = d.parentDisabilityType || '';
+          if (d.parentDisabilityUrl) {
+            toggle('parentDisabilityDocArea', true);
+            document.getElementById('parentDisabilityLink').href = d.parentDisabilityUrl;
+          }
+        }
+
+        // 外籍父
+        document.getElementById('foreignFather').checked = !!d.foreignFather;
+        if (d.foreignFather) {
+          toggle('foreignFatherDetails', true);
+          const sel = document.getElementById('foreignFatherNationality');
+          const nat = d.foreignFatherNationality || '';
+          let found = Array.from(sel.options).some(o => o.value === nat);
+          if (found) { sel.value = nat; }
+          else if (nat) {
+            sel.value = '其他';
+            document.getElementById('foreignFatherNationalityOther').value = nat;
+            toggle('foreignFatherNationalityOther', true);
+          }
+        }
+
+        // 外籍母
+        document.getElementById('foreignMother').checked = !!d.foreignMother;
+        if (d.foreignMother) {
+          toggle('foreignMotherDetails', true);
+          const sel = document.getElementById('foreignMotherNationality');
+          const nat = d.foreignMotherNationality || '';
+          let found = Array.from(sel.options).some(o => o.value === nat);
+          if (found) { sel.value = nat; }
+          else if (nat) {
+            sel.value = '其他';
+            document.getElementById('foreignMotherNationalityOther').value = nat;
+            toggle('foreignMotherNationalityOther', true);
+          }
+        }
+
+        // 僑生
+        document.getElementById('overseas').checked = !!d.overseas;
+        if (d.overseas) {
+          toggle('overseasDetails', true);
+          if (d.overseasDocUrl) showExistingFile('overseasFilePreview', d.overseasDocUrl, '僑委會公文');
+        }
+
+        // 港澳生
+        document.getElementById('hongKongMacao').checked = !!d.hongKongMacao;
+        if (d.hongKongMacao) {
+          toggle('hongKongMacaoDetails', true);
+          if (d.hongKongMacaoDocUrl) showExistingFile('hongKongMacaoFilePreview', d.hongKongMacaoDocUrl, '居留證/護照');
+        }
+
+        // 雙重國籍
+        document.getElementById('dualNationality').checked = !!d.dualNationality;
+        if (d.dualNationality) {
+          toggle('dualNationalityDetails', true);
+          document.getElementById('secondNationality').value = d.secondNationality || '';
+          if (d.passport1Url || d.passport2Url) {
+            toggle('dualNationalityDocArea', true);
+            if (d.passport1Url) document.getElementById('passport1Link').href = d.passport1Url;
+            if (d.passport2Url) document.getElementById('passport2Link').href = d.passport2Url;
+          }
+        }
+
+        // 政府派外
+        document.getElementById('governmentOverseas').checked = !!d.governmentOverseas;
+
+        // 外籍生
+        document.getElementById('foreignStudent').checked = !!d.foreignStudent;
+        if (d.foreignStudent) {
+          toggle('foreignStudentDetails', true);
+          document.getElementById('foreignStudentNationality').value = d.foreignStudentNationality || '';
+          if (d.foreignStudentDocUrl) {
+            toggle('foreignStudentDocArea', true);
+            document.getElementById('foreignStudentLink').href = d.foreignStudentDocUrl;
+          }
+        }
+
+        // 大陸依親
+        document.getElementById('mainlandChina').checked = !!d.mainlandChina;
+        if (d.mainlandChina) {
+          toggle('mainlandChinaDetails', true);
+          if (d.mainlandChinaDocUrl) {
+            toggle('mainlandChinaDocArea', true);
+            document.getElementById('mainlandChinaLink').href = d.mainlandChinaDocUrl;
+          }
+        }
+      })
+      .catch(function(error) {
+        document.getElementById('loadingMessage').classList.add('hidden');
+        showToast('載入資料時發生錯誤，請稍後再試', 'error');
+      });
+  }
+
+  function validateForm(isNormal) {
+    if (isNormal) return true;
+
+    if (document.querySelector('input[name="incomeType"]:checked')) {
+      if (!document.getElementById('incomeFile').files[0] && !document.querySelector('#incomeFilePreview a'))
+        return showToast('請上傳低/中低收入戶證明文件', 'error'), false;
+    }
+    if (document.getElementById('aboriginal').checked) {
+      if (!document.getElementById('aboriginalType').value)
+        return showToast('請選擇原住民族別', 'error'), false;
+      if (!document.getElementById('aboriginalFile').files[0] && !document.querySelector('#aboriginalFilePreview a'))
+        return showToast('請上傳原住民戶口名簿', 'error'), false;
+    }
+    if (document.getElementById('disabilityStudent').checked) {
+      if (!document.getElementById('studentDisabilityLevel').value)
+        return showToast('請選擇學生障礙等級', 'error'), false;
+      if (!document.getElementById('studentDisabilityType').value.trim())
+        return showToast('請填寫學生障礙類別', 'error'), false;
+    }
+    if (document.getElementById('disabilityParent').checked) {
+      if (!document.getElementById('parentDisabilityLevel').value)
+        return showToast('請選擇家長障礙等級', 'error'), false;
+      if (!document.getElementById('parentDisabilityType').value.trim())
+        return showToast('請填寫家長障礙類別', 'error'), false;
+    }
+    if (document.getElementById('foreignFather').checked) {
+      const nat = document.getElementById('foreignFatherNationality').value;
+      if (!nat) return showToast('請選擇父親國籍', 'error'), false;
+      if (nat === '其他' && !document.getElementById('foreignFatherNationalityOther').value.trim())
+        return showToast('請填寫父親具體國籍', 'error'), false;
+    }
+    if (document.getElementById('foreignMother').checked) {
+      const nat = document.getElementById('foreignMotherNationality').value;
+      if (!nat) return showToast('請選擇母親國籍', 'error'), false;
+      if (nat === '其他' && !document.getElementById('foreignMotherNationalityOther').value.trim())
+        return showToast('請填寫母親具體國籍', 'error'), false;
+    }
+    if (document.getElementById('overseas').checked) {
+      if (!document.getElementById('overseasFile').files[0] && !document.querySelector('#overseasFilePreview a'))
+        return showToast('請上傳僑委會核准公文', 'error'), false;
+    }
+    if (document.getElementById('hongKongMacao').checked) {
+      if (!document.getElementById('hongKongMacaoFile').files[0] && !document.querySelector('#hongKongMacaoFilePreview a'))
+        return showToast('請上傳港澳生居留證或護照', 'error'), false;
+    }
+    if (document.getElementById('dualNationality').checked) {
+      if (!document.getElementById('secondNationality').value.trim())
+        return showToast('請填寫第二國籍', 'error'), false;
+      if (!document.getElementById('passport1File').files[0] && document.getElementById('passport1Link').href === location.href + '#')
+        return showToast('請上傳第一本護照封面（中華民國護照）', 'error'), false;
+      if (!document.getElementById('passport2File').files[0] && document.getElementById('passport2Link').href === location.href + '#')
+        return showToast('請上傳第二本護照封面（外國護照）', 'error'), false;
+    }
+    if (document.getElementById('foreignStudent').checked) {
+      if (!document.getElementById('foreignStudentNationality').value.trim())
+        return showToast('請填寫外籍生國籍', 'error'), false;
+      if (!document.getElementById('foreignStudentFile').files[0] && !document.getElementById('foreignStudentDocArea').classList.contains('hidden') === false)
+        return showToast('請上傳外籍生居留證', 'error'), false;
+    }
+    return true;
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = true;
+
+    const isNormal = document.getElementById('isNormal').checked;
+    if (!validateForm(isNormal)) { submitButton.disabled = false; return; }
+
+    const formData = { idNumber: currentUser.idNumber, name: currentUser.name, isNormal };
+
+    if (!isNormal) {
+      const incomeRadio = document.querySelector('input[name="incomeType"]:checked');
+      formData.lowIncome       = !!(incomeRadio && incomeRadio.value === 'low');
+      formData.middleLowIncome = !!(incomeRadio && incomeRadio.value === 'middleLow');
+      formData.aboriginal      = document.getElementById('aboriginal').checked;
+      formData.aboriginalType  = formData.aboriginal ? document.getElementById('aboriginalType').value : '';
+
+      formData.disabilityStudent       = document.getElementById('disabilityStudent').checked;
+      formData.studentDisabilityLevel  = formData.disabilityStudent ? document.getElementById('studentDisabilityLevel').value : '';
+      formData.studentDisabilityType   = formData.disabilityStudent ? document.getElementById('studentDisabilityType').value : '';
+
+      formData.disabilityParent       = document.getElementById('disabilityParent').checked;
+      formData.parentDisabilityLevel  = formData.disabilityParent ? document.getElementById('parentDisabilityLevel').value : '';
+      formData.parentDisabilityType   = formData.disabilityParent ? document.getElementById('parentDisabilityType').value : '';
+
+      formData.foreignFather = document.getElementById('foreignFather').checked;
+      if (formData.foreignFather) {
+        const nat = document.getElementById('foreignFatherNationality').value;
+        formData.foreignFatherNationality = nat === '其他'
+          ? document.getElementById('foreignFatherNationalityOther').value.trim() : nat;
+      } else { formData.foreignFatherNationality = ''; }
+
+      formData.foreignMother = document.getElementById('foreignMother').checked;
+      if (formData.foreignMother) {
+        const nat = document.getElementById('foreignMotherNationality').value;
+        formData.foreignMotherNationality = nat === '其他'
+          ? document.getElementById('foreignMotherNationalityOther').value.trim() : nat;
+      } else { formData.foreignMotherNationality = ''; }
+
+      formData.overseas           = document.getElementById('overseas').checked;
+      formData.hongKongMacao      = document.getElementById('hongKongMacao').checked;
+      formData.dualNationality    = document.getElementById('dualNationality').checked;
+      formData.secondNationality  = formData.dualNationality ? document.getElementById('secondNationality').value.trim() : '';
+      formData.governmentOverseas = document.getElementById('governmentOverseas').checked;
+      formData.foreignStudent     = document.getElementById('foreignStudent').checked;
+      formData.foreignStudentNationality = formData.foreignStudent ? document.getElementById('foreignStudentNationality').value.trim() : '';
+      formData.mainlandChina      = document.getElementById('mainlandChina').checked;
+    }
+
+    document.getElementById('loadingMessage').classList.remove('hidden');
+
+    try {
+      const uploads = [
+        { cond: (formData.lowIncome || formData.middleLowIncome) && !isNormal, id: 'incomeFile',          key: 'incomeDocUrl' },
+        { cond: formData.aboriginal      && !isNormal, id: 'aboriginalFile',       key: 'aboriginalFileUrl' },
+        { cond: formData.disabilityStudent && !isNormal, id: 'studentDisabilityFile', key: 'studentDisabilityUrl' },
+        { cond: formData.disabilityParent  && !isNormal, id: 'parentDisabilityFile',  key: 'parentDisabilityUrl' },
+        { cond: formData.overseas        && !isNormal, id: 'overseasFile',         key: 'overseasDocUrl' },
+        { cond: formData.hongKongMacao   && !isNormal, id: 'hongKongMacaoFile',    key: 'hongKongMacaoDocUrl' },
+        { cond: formData.dualNationality && !isNormal, id: 'passport1File',        key: 'passport1Url' },
+        { cond: formData.dualNationality && !isNormal, id: 'passport2File',        key: 'passport2Url' },
+        { cond: formData.foreignStudent  && !isNormal, id: 'foreignStudentFile',   key: 'foreignStudentDocUrl' },
+        { cond: formData.mainlandChina   && !isNormal, id: 'mainlandChinaFile',    key: 'mainlandChinaDocUrl' },
+      ];
+
+      for (const u of uploads) {
+        if (u.cond) {
+          const file = document.getElementById(u.id).files[0];
+          if (file) formData[u.key] = await readFileAsBase64(file);
+        }
+      }
+
+      const needsIncomeReminder = !isNormal && (formData.lowIncome || formData.middleLowIncome);
+
+      callAPI('saveSpecialStatus', { data: formData })
+        .then(function(res) {
+          document.getElementById('loadingMessage').classList.add('hidden');
+          if (res.success) {
+            if (needsIncomeReminder) {
+              showIncomeReminder();
+            } else {
+              showToast('資料儲存成功！');
+              loadExistingData();
+              setTimeout(() => { handleBack(); }, 2000);
+            }
+          } else {
+            showToast(res.message || '儲存失敗', 'error');
+            submitButton.disabled = false;
+          }
+        })
+        .catch(function(error) {
+          document.getElementById('loadingMessage').classList.add('hidden');
+          showToast('系統發生錯誤：' + error, 'error');
+          submitButton.disabled = false;
+        });
+
+    } catch (error) {
+      document.getElementById('loadingMessage').classList.add('hidden');
+      showToast('系統發生錯誤：' + error, 'error');
+      submitButton.disabled = false;
+    }
+  }
+
+  function showIncomeReminder() {
+    document.getElementById('incomeReminderModal').classList.remove('hidden');
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
+    toast.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="${type === 'error' ? 'M6 18L18 6M6 6l12 12' : 'M5 13l4 4L19 7'}" />
+      </svg>
+      <span>${message}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+  }
+
+  function handleBack() {
+    window.location.href = 'index.html';
+  }
+</script>
+
+<!-- 低/中低收入戶正本繳交提醒 -->
+<div id="incomeReminderModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+    <div class="flex items-center mb-4">
+      <span class="text-3xl mr-3">📋</span>
+      <h3 class="text-lg font-bold text-gray-800">重要提醒</h3>
+    </div>
+    <div class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-lg mb-6">
+      <p class="text-orange-800 font-semibold mb-1">請務必攜帶證明正本</p>
+      <p class="text-orange-700 text-sm leading-relaxed">
+        您已上傳低收入戶／中低收入戶證明文件，請於<strong>新生訓練當日</strong>攜帶該證明之<strong>正本</strong>至教務處註冊組繳交，以利辦理獎學金相關業務。
+      </p>
+    </div>
+    <p class="text-gray-500 text-sm mb-5">資料已儲存成功，點選「確認」後返回主選單。</p>
+    <div class="text-right">
+      <button onclick="handleBack()"
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none">
+        確認，我知道了
+      </button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

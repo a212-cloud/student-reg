@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- base tag removed: now served from GitHub Pages -->
+  <meta charset="UTF-8">
+  <title>基本個資填寫 - 南崁國中新生資料系統</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <style>
+    .toast {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 1rem;
+      background: #4CAF50;
+      color: white;
+      border-radius: 0.375rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      animation: slideIn 0.3s ease-out forwards;
+    }
+
+    .toast svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <div class="max-w-3xl mx-auto">
+        <!-- 返回按鈕 -->
+        <button onclick="handleBack()" class="mb-4 inline-flex items-center text-blue-600 hover:text-blue-800">
+          <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          返回主選單
+        </button>
+
+        <!-- 主要表單區塊 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-2xl font-bold text-center mb-6">七年級新生個人資料</h2>
+
+          <!-- 學生基本資料區塊 -->
+          <div class="p-4 bg-blue-50 rounded-lg mb-6 border-l-4 border-blue-500">
+            <h3 class="font-bold text-blue-800 mb-3">基本資料</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">身分證字號</label>
+                <div id="userIdNumber" class="p-2 bg-white rounded border border-gray-300"></div>
+              </div>
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">姓名</label>
+                <div id="userName" class="p-2 bg-white rounded border border-gray-300"></div>
+              </div>
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">生日</label>
+                <div id="birthDate" class="p-2 bg-white rounded border border-gray-300"></div>
+              </div>
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                  學生本人手機號碼
+                  <span class="text-sm font-normal text-gray-500">(無則免填)</span>
+                </label>
+                <input type="tel" id="studentPhone" 
+                       pattern="09\d{8}"
+                       title="請輸入10位數的手機號碼，格式：0912345678"
+                       placeholder="格式：0912345678"
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       oninput="validatePhone(this)">
+              </div>
+              <div class="col-span-2">
+              <label class="block text-gray-700 text-sm font-bold mb-2">
+                畢業國小
+                <span class="text-sm font-normal text-gray-500">(例如：桃園市南美國小)</span>
+              </label>
+              <input type="text" id="graduatedSchool" 
+                    placeholder="格式：○○市○○國小" 
+                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            </div>
+          </div>
+
+          <!-- 載入中提示 -->
+          <div id="loadingMessage" class="hidden text-center py-4">
+            <div class="inline-flex items-center px-4 py-2 font-semibold leading-6 text-blue-500">
+              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              儲存中...
+            </div>
+          </div>
+
+          <form id="personalInfoForm" class="space-y-6">
+            <!-- 父母資訊 -->
+            <div class="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+              <h4 class="font-bold text-purple-800 mb-4">父母資訊</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">父親姓名</label>
+                  <input type="text" id="fatherName"
+                         class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">父親手機號碼</label>
+                  <input type="tel" id="fatherPhone"
+                         pattern="09\d{8}"
+                         title="請輸入10位數的手機號碼，格式：0912345678"
+                         placeholder="格式：0912345678"
+                         class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                         oninput="validatePhone(this)">
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">母親姓名</label>
+                  <input type="text" id="motherName"
+                         class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">母親手機號碼</label>
+                  <input type="tel" id="motherPhone"
+                         pattern="09\d{8}"
+                         title="請輸入10位數的手機號碼，格式：0912345678"
+                         placeholder="格式：0912345678"
+                         class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                         oninput="validatePhone(this)">
+                </div>
+              </div>
+            </div>
+
+            <!-- 監護人資訊 -->
+            <div class="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+              <h4 class="font-bold text-yellow-800 mb-4">監護人資訊</h4>
+              <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">監護人資料來源</label>
+                <div class="space-x-4">
+                  <label class="inline-flex items-center">
+                    <input type="radio" name="guardianSource" value="father" class="form-radio">
+                    <span class="ml-2">同父親資料</span>
+                  </label>
+                  <label class="inline-flex items-center">
+                    <input type="radio" name="guardianSource" value="mother" class="form-radio">
+                    <span class="ml-2">同母親資料</span>
+                  </label>
+                  <label class="inline-flex items-center">
+                    <input type="radio" name="guardianSource" value="other" class="form-radio" checked>
+                    <span class="ml-2">另填</span>
+                  </label>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">監護人姓名</label>
+                  <input type="text" id="guardianName" required
+                         class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">監護人與學生關係</label>
+                  <select id="guardianRelation" required
+                          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                          onchange="handleGuardianRelationChange()">
+                    <option value="">請選擇關係</option>
+                    <option value="父">父</option>
+                    <option value="母">母</option>
+                    <option value="祖父">祖父</option>
+                    <option value="祖母">祖母</option>
+                    <option value="其他">其他</option>
+                  </select>
+                  <!-- 其他關係輸入欄位 -->
+                  <div id="otherRelationInput" class="mt-2 hidden">
+                    <input type="text" id="otherRelationDetail"
+                           placeholder="請輸入關係"
+                           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">監護人手機</label>
+                  <input type="tel" id="guardianPhone" required
+                         pattern="09\d{8}"
+                         title="請輸入10位數的手機號碼，格式：0912345678"
+                         placeholder="格式：0912345678"
+                         class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                         oninput="validatePhone(this)">
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">
+                    市內電話
+                    <span class="text-sm font-normal text-gray-500">(無則免填)</span>
+                  </label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <div>
+                      <input type="tel" id="homePhoneArea" placeholder="區碼"
+                             class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                             maxlength="2">
+                    </div>
+                    <div class="col-span-2">
+                      <input type="tel" id="homePhoneNumber" placeholder="電話號碼"
+                             class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                             maxlength="8">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 地址資訊 -->
+            <div class="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+              <h4 class="font-bold text-green-800 mb-4">地址資訊</h4>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">戶籍地址</label>
+                  <input type="text" id="registeredAddress" required
+                         class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">聯絡地址</label>
+                  <div class="space-y-2">
+                    <label class="inline-flex items-center">
+                      <input type="checkbox" id="sameAsRegistered" class="form-checkbox">
+                      <span class="ml-2">同戶籍地址</span>
+                    </label>
+                    <input type="text" id="contactAddress"
+                           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 提交按鈕 -->
+            <div class="flex justify-between pt-6">
+              <button type="button" onclick="handleBack()" 
+                      class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                返回
+              </button>
+              <button type="submit" id="submitButton"
+                      class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                儲存資料
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Toast 容器 -->
+  <div id="toastContainer"></div>
+
+  <script>
+    // 全域變數
+    let currentUser = {
+      idNumber: '',
+      name: '',
+      birthDate: ''
+    };
+
+    // 手機號碼驗證函數
+    function validatePhone(input) {
+      const phonePattern = /^09\d{8}$/;
+      if (input.value && !phonePattern.test(input.value)) {
+        input.setCustomValidity('請輸入正確的手機號碼格式（10位數字，開頭為09）');
+        console.log('手機號碼格式不正確:', input.value);
+      } else {
+        input.setCustomValidity('');
+        console.log('手機號碼格式正確');
+      }
+    }
+
+    // 監聽關係選擇變更
+    function handleGuardianRelationChange() {
+      const relationSelect = document.getElementById('guardianRelation');
+      const otherRelationInput = document.getElementById('otherRelationInput');
+      const otherRelationDetail = document.getElementById('otherRelationDetail');
+      
+      if (relationSelect.value === '其他') {
+        otherRelationInput.classList.remove('hidden');
+        otherRelationDetail.required = true;
+      } else {
+        otherRelationInput.classList.add('hidden');
+        otherRelationDetail.required = false;
+        otherRelationDetail.value = '';
+      }
+    }
+
+    // 顯示 Toast 消息
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(toast);
+      
+      // 1.5秒後移除 Toast
+      setTimeout(() => {
+        toast.remove();
+      }, 1500);
+    }
+
+    // ===== GAS API 設定 =====
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzVZZO75XMjmhpP8YQDrii75vq2K1JmvP3Zf0rbvICoijZDUS7vuUBi8ExcjP7QLaIKwg/exec';
+    async function callAPI(action, params) {
+      const res = await fetch(GAS_API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...params }),
+        redirect: 'follow'
+      });
+      if (!res.ok) throw new Error('網路錯誤 ' + res.status);
+      return res.json();
+    }
+    // ========================
+
+    // 頁面載入時執行
+    window.onload = function() {
+      console.log('頁面開始載入...');
+      console.log('準備檢查登入狀態');
+      checkLoginStatus();
+      console.log('登入狀態檢查完成，開始設置表單...');
+      setupForm();
+      setupAddressCheckbox();
+      setupGuardianSourceSelection();
+      console.log('表單設置完成');
+    };
+
+    // 設置監護人資料來源選擇功能
+    function setupGuardianSourceSelection() {
+      console.log('開始設置監護人資料選擇功能');
+      const guardianSourceInputs = document.getElementsByName('guardianSource');
+      
+      guardianSourceInputs.forEach(input => {
+        input.addEventListener('change', function() {
+          console.log('監護人資料來源變更為:', this.value);
+          const guardianNameInput = document.getElementById('guardianName');
+          const guardianPhoneInput = document.getElementById('guardianPhone');
+          const guardianRelationInput = document.getElementById('guardianRelation');
+          
+          if (this.value === 'father') {
+            console.log('選擇父親資料作為監護人');
+            guardianNameInput.value = document.getElementById('fatherName').value;
+            guardianPhoneInput.value = document.getElementById('fatherPhone').value;
+            guardianRelationInput.value = '父';
+            guardianNameInput.readOnly = true;
+            guardianPhoneInput.readOnly = true;
+          } 
+          else if (this.value === 'mother') {
+            console.log('選擇母親資料作為監護人');
+            guardianNameInput.value = document.getElementById('motherName').value;
+            guardianPhoneInput.value = document.getElementById('motherPhone').value;
+            guardianRelationInput.value = '母';
+            guardianNameInput.readOnly = true;
+            guardianPhoneInput.readOnly = true;
+          } 
+          else {
+            console.log('選擇手動填寫監護人資料');
+            guardianNameInput.value = '';
+            guardianPhoneInput.value = '';
+            guardianRelationInput.value = '';
+            guardianNameInput.readOnly = false;
+            guardianPhoneInput.readOnly = false;
+          }
+          // 觸發關係選擇變更事件
+          handleGuardianRelationChange();
+        });
+      });
+
+      // 監聽父母資料變更
+      ['fatherName', 'fatherPhone', 'motherName', 'motherPhone'].forEach(id => {
+        document.getElementById(id).addEventListener('input', function() {
+          const selectedSource = document.querySelector('input[name="guardianSource"]:checked').value;
+          if ((selectedSource === 'father' && id.startsWith('father')) ||
+              (selectedSource === 'mother' && id.startsWith('mother'))) {
+            if (id.endsWith('Name')) {
+              document.getElementById('guardianName').value = this.value;
+            } else {
+              document.getElementById('guardianPhone').value = this.value;
+            }
+          }
+        });
+      });
+    }
+
+    // 設置地址複製功能
+    function setupAddressCheckbox() {
+      console.log('開始設置地址複製功能');
+      const sameAsRegistered = document.getElementById('sameAsRegistered');
+      const registeredAddress = document.getElementById('registeredAddress');
+      const contactAddress = document.getElementById('contactAddress');
+
+      sameAsRegistered.addEventListener('change', function() {
+        console.log('地址複製選項變更:', this.checked);
+        if (this.checked) {
+          contactAddress.value = registeredAddress.value;
+          contactAddress.disabled = true;
+          console.log('已複製戶籍地址到聯絡地址');
+        } else {
+          contactAddress.disabled = false;
+          console.log('已啟用聯絡地址手動輸入');
+        }
+      });
+
+      registeredAddress.addEventListener('input', function() {
+        if (sameAsRegistered.checked) {
+          contactAddress.value = this.value;
+          console.log('戶籍位址變更，已同步更新聯絡位址');
+        }
+      });
+    }
+
+    // 檢查登入狀態
+    function checkLoginStatus() {
+      console.log('開始檢查登入狀態');
+      currentUser.idNumber = localStorage.getItem('currentUser');
+      currentUser.name = localStorage.getItem('userName');
+      
+      console.log('目前使用者資訊:', currentUser);
+      
+      if (!currentUser.idNumber || !currentUser.name) {
+        console.log('未找到使用者資訊，準備返回主頁');
+        handleBack();
+        return;
+      }
+
+      // 顯示學生資料
+      document.getElementById('userIdNumber').textContent = currentUser.idNumber;
+      document.getElementById('userName').textContent = currentUser.name;
+      
+      // 從後端獲取生日
+      callAPI('getStudentBirthDate', { idNumber: currentUser.idNumber })
+        .then(response => {
+          if (response.success) {
+            document.getElementById('birthDate').textContent = response.birthDate || '';
+          }
+        })
+        .catch(err => console.error('取得生日失敗:', err));
+    }
+
+    // 設置表單
+    function setupForm() {
+      console.log('開始設置表單內容');
+
+      callAPI('getPersonalInfo', { idNumber: currentUser.idNumber })
+        .then(function(response) {
+          
+          if (response.success && response.data) {
+            console.log('開始填入表單資料:', response.data);
+            // 填入表單資料
+            document.getElementById('studentPhone').value = response.data.studentPhone || '';
+            document.getElementById('fatherName').value = response.data.fatherName || '';
+            document.getElementById('fatherPhone').value = response.data.fatherPhone || '';
+            document.getElementById('motherName').value = response.data.motherName || '';
+            document.getElementById('motherPhone').value = response.data.motherPhone || '';
+            document.getElementById('guardianName').value = response.data.guardianName || '';
+            document.getElementById('guardianPhone').value = response.data.guardianPhone || '';
+
+            // 處理監護人關係
+            const guardianRelation = response.data.guardianRelation || '';
+            if (guardianRelation.startsWith('其他-')) {
+              document.getElementById('guardianRelation').value = '其他';
+              document.getElementById('otherRelationInput').classList.remove('hidden');
+              document.getElementById('otherRelationDetail').value = guardianRelation.substring(3);
+            } else {
+              document.getElementById('guardianRelation').value = guardianRelation;
+            }
+
+            document.getElementById('registeredAddress').value = response.data.registeredAddress || '';
+            document.getElementById('contactAddress').value = response.data.contactAddress || '';
+            document.getElementById('graduatedSchool').value = response.data.graduatedSchool || '';
+
+            // 處理市話號碼
+            if (response.data.homePhone) {
+              console.log('處理市話號碼:', response.data.homePhone);
+              const [area, number] = response.data.homePhone.split('-');
+              document.getElementById('homePhoneArea').value = area || '';
+              document.getElementById('homePhoneNumber').value = number || '';
+            }
+
+            // 檢查監護人資料是否與父母親相同
+            if (response.data.guardianName && response.data.guardianPhone) {
+              console.log('檢查監護人資料對應');
+              if (response.data.guardianName === response.data.fatherName && 
+                  response.data.guardianPhone === response.data.fatherPhone) {
+                document.querySelector('input[name="guardianSource"][value="father"]').checked = true;
+                document.getElementById('guardianName').readOnly = true;
+                document.getElementById('guardianPhone').readOnly = true;
+                console.log('監護人資料與父親相同');
+              } else if (response.data.guardianName === response.data.motherName && 
+                        response.data.guardianPhone === response.data.motherPhone) {
+                document.querySelector('input[name="guardianSource"][value="mother"]').checked = true;
+                document.getElementById('guardianName').readOnly = true;
+                document.getElementById('guardianPhone').readOnly = true;
+                console.log('監護人資料與母親相同');
+              } else {
+                document.querySelector('input[name="guardianSource"][value="other"]').checked = true;
+                console.log('監護人資料為獨立填寫');
+              }
+            }
+
+            // 檢查位址是否相同
+            if (response.data.registeredAddress && 
+                response.data.contactAddress && 
+                response.data.registeredAddress === response.data.contactAddress) {
+              document.getElementById('sameAsRegistered').checked = true;
+              document.getElementById('contactAddress').disabled = true;
+              console.log('聯絡位址與戶籍位址相同');
+            }
+
+            // 觸發監護人關係選擇變更事件
+            handleGuardianRelationChange();
+          }
+          
+          document.getElementById('loadingMessage').classList.add('hidden');
+          document.getElementById('personalInfoForm').classList.remove('hidden');
+          console.log('表單設置完成');
+        })
+        .catch(function(error) {
+          console.error('載入個人資料失敗:', error);
+          document.getElementById('loadingMessage').textContent = '載入失敗，但您仍可填寫表單';
+          document.getElementById('personalInfoForm').classList.remove('hidden');
+        });
+
+      document.getElementById('personalInfoForm').onsubmit = handleSubmit;
+    }
+
+    // 處理表單提交
+    function handleSubmit(event) {
+      event.preventDefault();
+      console.log('開始處理表單提交');
+      
+      // 檢查其他關係欄位
+      const guardianRelation = document.getElementById('guardianRelation');
+      const otherRelationDetail = document.getElementById('otherRelationDetail');
+      if (guardianRelation.value === '其他' && !otherRelationDetail.value.trim()) {
+        alert('請填寫具體的監護人關係');
+        otherRelationDetail.focus();
+        return;
+      }
+
+      // 禁用提交按鈕防止重複提交
+      const submitButton = document.getElementById('submitButton');
+      submitButton.disabled = true;
+      
+      // 組合市話號碼
+      const areaCode = document.getElementById('homePhoneArea').value;
+      const phoneNumber = document.getElementById('homePhoneNumber').value;
+      const fullHomePhone = (areaCode && phoneNumber) ? 
+        `${areaCode}-${phoneNumber}` : '';
+      
+const data = {
+  idNumber: currentUser.idNumber,
+  name: currentUser.name,
+  studentPhone: document.getElementById('studentPhone').value,
+  fatherName: document.getElementById('fatherName').value,
+  fatherPhone: document.getElementById('fatherPhone').value,
+  motherName: document.getElementById('motherName').value,
+  motherPhone: document.getElementById('motherPhone').value,
+  guardianName: document.getElementById('guardianName').value,
+  guardianRelation: (() => {
+    const relation = document.getElementById('guardianRelation').value;
+    if (relation === '其他') {
+      const detail = document.getElementById('otherRelationDetail').value.trim();
+      return detail ? `其他-${detail}` : '其他';
+    }
+    return relation;
+  })(),
+  guardianPhone: document.getElementById('guardianPhone').value,
+  homePhone: fullHomePhone,
+  registeredAddress: document.getElementById('registeredAddress').value,
+  contactAddress: document.getElementById('contactAddress').value,  // 這裡需要一個逗號
+  graduatedSchool: document.getElementById('graduatedSchool').value  // 新增這一行
+};
+
+      console.log('準備提交的資料:', data);
+
+      // 顯示載入中訊息
+      document.getElementById('loadingMessage').classList.remove('hidden');
+      document.getElementById('personalInfoForm').classList.add('hidden');
+      
+      callAPI('savePersonalInfo', { data })
+        .then(function(response) {
+          if (response.success) {
+            showToast('資料儲存成功！');
+            document.getElementById('loadingMessage').classList.add('hidden');
+            document.getElementById('personalInfoForm').classList.remove('hidden');
+            submitButton.disabled = false;
+            setTimeout(() => { handleBack(); }, 2000);
+          } else {
+            document.getElementById('loadingMessage').classList.add('hidden');
+            document.getElementById('personalInfoForm').classList.remove('hidden');
+            alert('儲存失敗：' + (response.message || '未知錯誤'));
+            submitButton.disabled = false;
+          }
+        })
+        .catch(function(error) {
+          console.error('儲存失敗:', error);
+          document.getElementById('loadingMessage').classList.add('hidden');
+          document.getElementById('personalInfoForm').classList.remove('hidden');
+          alert('系統發生錯誤：' + error);
+          submitButton.disabled = false;
+        });
+    }
+
+    // 返回主頁
+    function handleBack() {
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
+

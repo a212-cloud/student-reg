@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- base tag removed: now served from GitHub Pages -->
+  <meta charset="UTF-8">
+  <title>存摺資料上傳</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="min-h-screen bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <div class="max-w-2xl mx-auto">
+        <!-- 返回按鈕 -->
+        <button onclick="handleBack()" class="mb-4 inline-flex items-center text-blue-600 hover:text-blue-800">
+          <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          返回主選單
+        </button>
+
+        <!-- 說明區塊 -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
+          <h3 class="text-blue-800 font-bold mb-2">📝 重要說明</h3>
+          <ul class="text-blue-700 space-y-2">
+            <li class="flex items-start">
+              <span class="text-green-500 mr-2">✓</span>
+              <span>
+                <strong>最佳選擇：</strong>上傳<span class="font-bold">學生本人的郵局存摺</span>
+                <div class="text-sm text-blue-600 mt-1">
+                  · 免手續費
+                  · 款項入帳最快速
+                  · 安全可靠的電子化程序
+                </div>
+              </span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-blue-500 mr-2">○</span>
+              <span>
+                <strong>替代方案：</strong>提供<span class="font-bold">家長的郵局存摺</span>
+                <div class="text-sm text-blue-600 mt-1">
+                  · 同樣免手續費
+                  · 快速便利的電子入帳
+                </div>
+              </span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-yellow-500 mr-2">△</span>
+              <span>
+                <strong>次要選擇：</strong>其他銀行帳戶
+                <div class="text-sm text-yellow-600 mt-1">
+                  · 需收取跨行手續費30元
+                  · 入帳時間較長
+                </div>
+              </span>
+            </li>
+            <li>
+              <div class="mt-2 text-sm bg-blue-100 p-2 rounded">
+                💡 <strong>小提醒：</strong>如果您還沒有郵局帳戶，建議可以順便申辦一個，不只方便接收學校退款，未來求學期間的各項補助金也都十分便利！
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 表單區塊 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-2xl font-bold text-center mb-6">存摺資料上傳</h2>
+          
+          <form id="bankInfoForm" class="space-y-6">
+            <!-- 學生基本資料區塊 -->
+            <div class="p-4 bg-gray-50 rounded-lg">
+              <h3 class="font-bold text-gray-700 mb-3">學生基本資料</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">身分證字號</label>
+                  <div id="studentId" class="p-2 bg-gray-100 rounded border border-gray-300"></div>
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2">姓名</label>
+                  <div id="studentName" class="p-2 bg-gray-100 rounded border border-gray-300"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 存摺資料 -->
+            <div class="space-y-4" id="bankInfoFields">
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="accountName">
+                  存摺戶名
+                </label>
+                <input type="text" id="accountName" name="accountName" required
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                       placeholder="請輸入存摺戶名">
+              </div>
+
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="relationship">
+                  存摺持有人與學生的關係
+                </label>
+                <select id="relationship" name="relationship" required
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                  <option value="">請選擇關係</option>
+                  <option value="學生本人">學生本人</option>
+                  <option value="學生父親">學生父親</option>
+                  <option value="學生母親">學生母親</option>
+                  <option value="其他監護人">其他監護人</option>
+                </select>
+                <input type="text" id="otherRelationship" name="otherRelationship"
+                       class="mt-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline hidden"
+                       placeholder="請說明與學生關係">
+              </div>
+
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="holderIdNumber">
+                  存摺持有人身分證字號(或居留證號)
+                </label>
+                <input type="text" id="holderIdNumber" name="holderIdNumber" required maxlength="10"
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                       placeholder="請輸入身分證字號或居留證號">
+                <div id="holderIdNumberError" class="text-red-500 text-xs mt-1 hidden"></div>
+              </div>
+
+              <!-- 存款機構選擇 -->
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                  存款機構類型 <span class="text-red-500">*</span>
+                </label>
+                <div class="flex gap-8 mt-1">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="bankType" value="post" class="h-4 w-4 text-blue-600">
+                    <span class="text-gray-700 font-medium">📮 郵局</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="bankType" value="bank" class="h-4 w-4 text-blue-600">
+                    <span class="text-gray-700 font-medium">🏦 銀行</span>
+                  </label>
+                </div>
+                <div id="bankTypeError" class="text-red-500 text-xs mt-1 hidden">請選擇存款機構類型</div>
+              </div>
+
+              <!-- 郵局欄位 -->
+              <div id="postFields" class="space-y-4 hidden">
+                <div class="bg-green-50 p-3 rounded-lg">
+                  <p class="text-green-700 text-sm"><span class="font-bold">✨ 推薦！</span> 郵局帳戶免手續費、快速入帳</p>
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2" for="postalCode">
+                    郵局局號 <span class="text-red-500">*</span>
+                    <span class="text-gray-500 text-xs font-normal ml-1">（7位數字）</span>
+                  </label>
+                  <input type="text" id="postalCode" name="postalCode" maxlength="7"
+                         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                         placeholder="請輸入局號（7位數字）">
+                  <div id="postalCodeError" class="text-red-500 text-xs mt-1 hidden">請輸入正確的7位數字</div>
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2" for="postalAccount">
+                    郵局帳號 <span class="text-red-500">*</span>
+                    <span class="text-gray-500 text-xs font-normal ml-1">（7位數字）</span>
+                  </label>
+                  <input type="text" id="postalAccount" name="postalAccount" maxlength="7"
+                         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                         placeholder="請輸入帳號（7位數字）">
+                  <div id="postalAccountError" class="text-red-500 text-xs mt-1 hidden">請輸入正確的7位數字</div>
+                </div>
+              </div>
+
+              <!-- 銀行欄位 -->
+              <div id="bankFields" class="space-y-4 hidden">
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2" for="bankSelect">
+                    銀行名稱 <span class="text-red-500">*</span>
+                  </label>
+                  <select id="bankSelect" name="bankSelect"
+                          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="">請選擇銀行</option>
+                    <option value="台灣銀行(004)">004 台灣銀行</option>
+                    <option value="土地銀行(005)">005 土地銀行</option>
+                    <option value="合作金庫銀行(006)">006 合作金庫銀行</option>
+                    <option value="第一銀行(007)">007 第一銀行</option>
+                    <option value="華南銀行(008)">008 華南銀行</option>
+                    <option value="彰化銀行(009)">009 彰化銀行</option>
+                    <option value="上海商業儲蓄銀行(011)">011 上海商業儲蓄銀行</option>
+                    <option value="台北富邦銀行(012)">012 台北富邦銀行</option>
+                    <option value="國泰世華銀行(013)">013 國泰世華銀行</option>
+                    <option value="高雄銀行(016)">016 高雄銀行</option>
+                    <option value="兆豐國際商業銀行(017)">017 兆豐國際商業銀行</option>
+                    <option value="花旗銀行(021)">021 花旗銀行</option>
+                    <option value="台灣中小企業銀行(050)">050 台灣中小企業銀行</option>
+                    <option value="渣打國際商業銀行(052)">052 渣打國際商業銀行</option>
+                    <option value="台中商業銀行(053)">053 台中商業銀行</option>
+                    <option value="京城商業銀行(054)">054 京城商業銀行</option>
+                    <option value="匯豐銀行(081)">081 匯豐銀行</option>
+                    <option value="瑞興商業銀行(101)">101 瑞興商業銀行</option>
+                    <option value="華泰商業銀行(102)">102 華泰商業銀行</option>
+                    <option value="台灣新光商業銀行(103)">103 台灣新光商業銀行</option>
+                    <option value="陽信商業銀行(108)">108 陽信商業銀行</option>
+                    <option value="板信商業銀行(118)">118 板信商業銀行</option>
+                    <option value="三信商業銀行(147)">147 三信商業銀行</option>
+                    <option value="聯邦商業銀行(803)">803 聯邦商業銀行</option>
+                    <option value="遠東國際商業銀行(805)">805 遠東國際商業銀行</option>
+                    <option value="元大商業銀行(806)">806 元大商業銀行</option>
+                    <option value="永豐商業銀行(807)">807 永豐商業銀行</option>
+                    <option value="玉山商業銀行(808)">808 玉山商業銀行</option>
+                    <option value="凱基商業銀行(809)">809 凱基商業銀行</option>
+                    <option value="星展銀行(810)">810 星展銀行</option>
+                    <option value="台新商業銀行(812)">812 台新商業銀行</option>
+                    <option value="日盛商業銀行(815)">815 日盛商業銀行</option>
+                    <option value="安泰商業銀行(816)">816 安泰商業銀行</option>
+                    <option value="中國信託商業銀行(822)">822 中國信託商業銀行</option>
+                  </select>
+                  <div id="bankSelectError" class="text-red-500 text-xs mt-1 hidden">請選擇銀行</div>
+                </div>
+                <div>
+                  <label class="block text-gray-700 text-sm font-bold mb-2" for="bankAccount">
+                    銀行帳號 <span class="text-red-500">*</span>
+                    <span class="text-gray-500 text-xs font-normal ml-1">（10～16位數字）</span>
+                  </label>
+                  <input type="text" id="bankAccount" name="bankAccount" maxlength="16"
+                         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                         placeholder="請輸入銀行帳號">
+                  <div id="bankAccountError" class="text-red-500 text-xs mt-1 hidden">請輸入正確的銀行帳號（10～16位數字）</div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                  存摺封面照片
+                </label>
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg transition-all duration-200 hover:border-blue-500 hover:bg-blue-50" id="dropZone">
+                  <div class="space-y-1 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="flex text-sm text-gray-600">
+                      <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
+                        <span>選擇檔案</span>
+                        <input id="file-upload" name="file-upload" type="file" class="sr-only" accept="image/*">
+                      </label>
+                      <p class="pl-1">或將檔案拖曳至此</p>
+                    </div>
+                    <p class="text-xs text-gray-500">
+                      PNG, JPG, GIF 格式 (最大 5MB)
+                    </p>
+                  </div>
+                </div>
+                <div id="filePreview" class="mt-2"></div>
+                <div id="fileError" class="text-red-500 text-xs mt-1 hidden"></div>
+              </div>
+            </div>
+
+            <!-- 不提供存褶選項 -->
+            <div class="p-4 bg-gray-50 rounded-lg border-l-4 border-yellow-500">
+              <div class="flex items-start space-x-2">
+                <input type="checkbox" id="noBankAccount" name="noBankAccount" class="h-4 w-4 text-gray-400 mt-1">
+                <label for="noBankAccount" class="text-gray-600">
+                  <span class="font-medium">⚠️ 僅限特殊情況：若確實無法提供任何存摺，未來各項款項將以現金方式退還</span>
+                  <div class="mt-2 text-sm text-yellow-700">
+                    請注意：選擇現金退款可能導致款項領取時間延長，金額較大時甚至需家長到校簽領，建議您優先考慮提供郵局存摺
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- 提交按鈕 -->
+            <div>
+              <button type="submit"
+                      class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                提交資料
+              </button>
+            </div>
+          </form>
+
+          <!-- 底部返回連結 -->
+          <div class="mt-6 text-center">
+            <button onclick="handleBack()" 
+                    class="inline-flex items-center text-blue-600 hover:text-blue-800">
+              <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+              返回主選單
+            </button>
+          </div>
+
+          <!-- 載入中提示 -->
+          <div id="loading" class="hidden">
+            <div class="fixed top-0 left-0 w-full h-full bg-gray-900 bg-opacity-50 flex items-center justify-center">
+              <div class="bg-white p-6 rounded-lg shadow-xl">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mx-auto"></div>
+                <p class="mt-4 text-gray-700" id="loadingText">資料處理中，請稍候...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+    // 全域變數
+    // ===== GAS API 設定 =====
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzVZZO75XMjmhpP8YQDrii75vq2K1JmvP3Zf0rbvICoijZDUS7vuUBi8ExcjP7QLaIKwg/exec';
+    async function callAPI(action, params) {
+      const res = await fetch(GAS_API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...params }),
+        redirect: 'follow'
+      });
+      if (!res.ok) throw new Error('網路錯誤 ' + res.status);
+      return res.json();
+    }
+    // ========================
+
+    let currentUser = {
+      idNumber: '',
+      name: ''
+    };
+
+    // 從 Google Drive URL 提取 File ID
+    function extractDriveFileId(url) {
+      if (!url) return null;
+      const match = url.match(/\/file\/d\/([^/]+)/) || url.match(/[?&]id=([^&]+)/);
+      return match ? match[1] : null;
+    }
+
+    // 頁面載入時執行
+    window.onload = function() {
+      checkLoginStatus();
+      setupEventListeners();
+    };
+
+    // 檢查登入狀態和載入存摺資料
+    function checkLoginStatus() {
+      currentUser.idNumber = localStorage.getItem('currentUser');
+      currentUser.name = localStorage.getItem('userName');
+      
+      if (!currentUser.idNumber || !currentUser.name) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // 顯示學生資料
+      document.getElementById('studentId').textContent = currentUser.idNumber;
+      document.getElementById('studentName').textContent = currentUser.name;
+
+      // 載入既有的存摺資料
+      const loadingIndicator = document.getElementById('loading');
+      loadingIndicator.classList.remove('hidden');
+      
+      callAPI('getBankInfo', { idNumber: currentUser.idNumber })
+        .then(function(result) {
+          console.log('載入存摺資料結果:', result);
+          loadingIndicator.classList.add('hidden');
+          
+          if (result.success) {
+            const noBankAccountCheckbox = document.getElementById('noBankAccount');
+            const bankInfoFields = document.getElementById('bankInfoFields');
+            const submitButton = document.querySelector('button[type="submit"]');
+            const form = document.getElementById('bankInfoForm');
+
+            if (result.data.noBankAccount === true) {
+              console.log('學生選擇不提供存摺，設置 checkbox 為 true');
+              
+              // 確保先重置表單
+              form.reset();
+              
+              // 明確設置 checkbox 狀態
+              noBankAccountCheckbox.checked = true;
+              
+              // 禁用輸入欄位
+              bankInfoFields.classList.add('opacity-50', 'pointer-events-none');
+              
+              // 移除所有必填屬性
+              bankInfoFields.querySelectorAll('[required]').forEach(input => {
+                input.required = false;
+              });
+              
+              // 更新按鈕文字
+              submitButton.textContent = '確認送出';
+              
+              // 清空圖片預覽
+              const filePreview = document.getElementById('filePreview');
+              filePreview.innerHTML = '';
+              
+              // 隱藏其他監護人輸入欄位
+              document.getElementById('otherRelationship').classList.add('hidden');
+              
+            } else if (result.data.accountName) {
+              console.log('載入既有存摺資料');
+
+              // 填入既有資料
+              if (result.data.accountName) form.accountName.value = result.data.accountName;
+              if (result.data.relationship) {
+                form.relationship.value = result.data.relationship.startsWith('其他監護人')
+                  ? '其他監護人'
+                  : result.data.relationship;
+
+                if (result.data.relationship.startsWith('其他監護人')) {
+                  const otherRelationship = document.getElementById('otherRelationship');
+                  otherRelationship.classList.remove('hidden');
+                  otherRelationship.required = true;
+                  otherRelationship.value = result.data.relationship.replace('其他監護人-', '');
+                }
+              }
+
+              if (result.data.holderIdNumber) form.holderIdNumber.value = result.data.holderIdNumber;
+
+              // 填入存款機構資料
+              if (result.data.bankType === 'post') {
+                document.querySelector('input[name="bankType"][value="post"]').checked = true;
+                document.getElementById('postFields').classList.remove('hidden');
+                if (result.data.postalCode) document.getElementById('postalCode').value = result.data.postalCode;
+                if (result.data.accountNumber) document.getElementById('postalAccount').value = result.data.accountNumber;
+              } else if (result.data.bankType === 'bank') {
+                document.querySelector('input[name="bankType"][value="bank"]').checked = true;
+                document.getElementById('bankFields').classList.remove('hidden');
+                if (result.data.institution) document.getElementById('bankSelect').value = result.data.institution;
+                if (result.data.accountNumber) document.getElementById('bankAccount').value = result.data.accountNumber;
+              }
+
+              // 顯示已上傳的存摺照片
+              if (result.data.documentUrl) {
+                const filePreview = document.getElementById('filePreview');
+                const fileId = extractDriveFileId(result.data.documentUrl);
+                const thumbUrl = fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w300` : null;
+                filePreview.innerHTML = `
+                  <div class="text-sm">
+                    <p class="mb-1 text-gray-600">目前已上傳的照片：</p>
+                    ${thumbUrl ? `<img src="${thumbUrl}" class="mt-2 max-h-48 mx-auto rounded border border-gray-200" onerror="this.style.display='none'">` : ''}
+                    <a href="${result.data.documentUrl}" target="_blank"
+                       class="text-blue-600 hover:text-blue-800 underline block mt-2">
+                      查看原始照片
+                    </a>
+                    <p class="mt-1 text-yellow-600">
+                      ※ 如需更新照片，請重新上傳新的照片即可
+                    </p>
+                  </div>
+                `;
+              }
+            }
+          } else {
+            console.log('載入資料失敗:', result.message);
+          }
+        })
+        .catch(function(error) {
+          console.error('載入資料失敗：', error);
+          loadingIndicator.classList.add('hidden');
+          alert('載入資料時發生錯誤，請稍後再試');
+        });
+    }
+
+    // 設置事件監聽器
+    function setupEventListeners() {
+      // 設置拖放相關事件
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('file-upload');
+
+      // 防止瀏覽器預設的拖放行為
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+      });
+
+      // 添加拖曳效果
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+      });
+
+      // 處理檔案拖放
+      dropZone.addEventListener('drop', handleDrop, false);
+
+      // 不提供存褶選項變更
+      document.getElementById('noBankAccount').addEventListener('change', function() {
+        const bankInfoFields = document.getElementById('bankInfoFields');
+        const submitButton = document.querySelector('button[type="submit"]');
+        const form = document.getElementById('bankInfoForm');
+        
+        if (this.checked) {
+          // 勾選不提供存摺時
+          bankInfoFields.classList.add('opacity-50', 'pointer-events-none');
+          // 移除所有必填屬性
+          bankInfoFields.querySelectorAll('[required]').forEach(input => {
+            input.required = false;
+          });
+          submitButton.textContent = '確認送出';
+        } else {
+          // 取消勾選時
+          bankInfoFields.classList.remove('opacity-50', 'pointer-events-none');
+          // 恢復必填屬性
+          document.getElementById('accountName').required = true;
+          document.getElementById('relationship').required = true;
+          document.getElementById('holderIdNumber').required = true;
+          submitButton.textContent = '提交資料';
+          
+          // 清空所有欄位，讓用戶重新填寫
+          form.reset();
+          const filePreview = document.getElementById('filePreview');
+          filePreview.innerHTML = '';
+          const otherRelationship = document.getElementById('otherRelationship');
+          otherRelationship.classList.add('hidden');
+        }
+      });
+
+      // 關係選擇變更
+      document.getElementById('relationship').addEventListener('change', function() {
+        const otherRelationshipInput = document.getElementById('otherRelationship');
+        if (this.value === '其他監護人') {
+          otherRelationshipInput.classList.remove('hidden');
+          otherRelationshipInput.required = true;
+        } else {
+          otherRelationshipInput.classList.add('hidden');
+          otherRelationshipInput.required = false;
+          otherRelationshipInput.value = '';
+        }
+      });
+
+      // 檔案上傳
+      document.getElementById('file-upload').addEventListener('change', handleFileSelect);
+
+      // 表單提交
+      document.getElementById('bankInfoForm').addEventListener('submit', handleSubmit);
+
+      // 身分證字號驗證
+      document.getElementById('holderIdNumber').addEventListener('blur', function() {
+        this.value = this.value.toUpperCase();
+        validateIDNumber(this);
+      });
+
+      // 存款機構類型切換
+      document.querySelectorAll('input[name="bankType"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          const postFields = document.getElementById('postFields');
+          const bankFields = document.getElementById('bankFields');
+          document.getElementById('bankTypeError').classList.add('hidden');
+          if (this.value === 'post') {
+            postFields.classList.remove('hidden');
+            bankFields.classList.add('hidden');
+          } else {
+            postFields.classList.add('hidden');
+            bankFields.classList.remove('hidden');
+          }
+        });
+      });
+
+      // 郵局局號、帳號：只允許數字，離焦時驗證長度
+      ['postalCode', 'postalAccount'].forEach(id => {
+        const input = document.getElementById(id);
+        const errorEl = document.getElementById(id + 'Error');
+        input.addEventListener('input', function() {
+          this.value = this.value.replace(/[^0-9]/g, '');
+        });
+        input.addEventListener('blur', function() {
+          if (this.value && this.value.length !== 7) {
+            errorEl.classList.remove('hidden');
+          } else {
+            errorEl.classList.add('hidden');
+          }
+        });
+      });
+
+      // 銀行帳號：只允許數字，離焦時驗證長度
+      const bankAccountInput = document.getElementById('bankAccount');
+      const bankAccountError = document.getElementById('bankAccountError');
+      bankAccountInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+      });
+      bankAccountInput.addEventListener('blur', function() {
+        if (this.value && (this.value.length < 10 || this.value.length > 16)) {
+          bankAccountError.classList.remove('hidden');
+        } else {
+          bankAccountError.classList.add('hidden');
+        }
+      });
+    }
+
+    // 返回主選單
+    function handleBack() {
+      window.location.href = 'index.html';
+    }
+
+    // 拖放相關輔助函數
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    function highlight(e) {
+      document.getElementById('dropZone').classList.add('border-blue-500', 'bg-blue-50');
+    }
+
+    function unhighlight(e) {
+      document.getElementById('dropZone').classList.remove('border-blue-500', 'bg-blue-50');
+    }
+
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+
+      if (files.length > 0) {
+        document.getElementById('file-upload').files = files;
+        handleFileSelect({ target: { files: files } });
+      }
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      const fileError = document.getElementById('fileError');
+      const filePreview = document.getElementById('filePreview');
+      
+      if (file) {
+        // 檢查檔案類型
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+          fileError.textContent = '請上傳 JPG、PNG 或 GIF 格式的圖片';
+          fileError.classList.remove('hidden');
+          filePreview.innerHTML = '';
+          event.target.value = '';
+          return;
+        }
+
+        // 檢查檔案大小
+        if (file.size > 5 * 1024 * 1024) {
+          fileError.textContent = '檔案大小不能超過 5MB';
+          fileError.classList.remove('hidden');
+          filePreview.innerHTML = '';
+          event.target.value = '';
+          return;
+        }
+
+        fileError.classList.add('hidden');
+        filePreview.innerHTML = `
+          <div class="text-sm text-gray-600">
+            <p class="mb-1">已選擇: ${file.name}</p>
+            <p class="text-yellow-600">
+              ※ 上傳新照片後將會取代原有的照片
+            </p>
+          </div>
+        `;
+
+        // 添加照片預覽
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.className = 'mt-2 max-h-48 mx-auto';
+          filePreview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // 台灣身分證字號完整驗證函數
+    function validateTaiwanID(id) {
+      // 清除空格並轉為大寫
+      id = id.trim().toUpperCase();
+      
+      // 基本格式檢查: 第一位英文字母 + 第二位1或2 + 後8位數字
+      const idPattern = /^[A-Z][12]\d{8}$/;
+      if (!idPattern.test(id)) {
+        return { isValid: false, message: '身分證字號格式不正確，應為1個英文字母後接9個數字' };
+      }
+      
+      // 英文字母對應的數值 (A=10, B=11, ... Z=35)
+      const cityCharMap = {
+        'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15, 'G': 16, 'H': 17,
+        'I': 34, 'J': 18, 'K': 19, 'L': 20, 'M': 21, 'N': 22, 'O': 35, 'P': 23,
+        'Q': 24, 'R': 25, 'S': 26, 'T': 27, 'U': 28, 'V': 29, 'W': 32, 'X': 30,
+        'Y': 31, 'Z': 33
+      };
+      
+      // 檢查第一個英文字母是否為有效的區域碼
+      const firstChar = id.charAt(0);
+      if (!cityCharMap[firstChar]) {
+        return { isValid: false, message: '無效的英文字母區域碼' };
+      }
+      
+      // 取得區域碼對應的數值
+      const cityNum = cityCharMap[firstChar];
+      
+      // 計算檢核碼
+      // 第一位數字為英文字母轉換後的十位數
+      const n1 = Math.floor(cityNum / 10);
+      // 第二位數字為英文字母轉換後的個位數
+      const n2 = cityNum % 10;
+      
+      let sum = n1 * 1 + n2 * 9;
+      
+      // 計算第3到第9位（即原本第2到第8位）的加權總和
+      for (let i = 1; i <= 8; i++) {
+        sum += parseInt(id.charAt(i)) * (9 - i);
+      }
+      
+      // 加上最後一位數字
+      sum += parseInt(id.charAt(9));
+      
+      // 檢查是否符合檢核規則（總和必須能被10整除）
+      if (sum % 10 !== 0) {
+        return { isValid: false, message: '身分證字號檢核碼不正確' };
+      }
+      
+      return { isValid: true, message: '身分證字號格式正確' };
+    }
+
+    // 台灣居留證號碼驗證
+    function validateResidentID(id) {
+      // 清除空格並轉為大寫
+      id = id.trim().toUpperCase();
+      
+      // 居留證格式: 兩個英文字母 + 8個數字
+      const residencePattern = /^[A-Z]{2}\d{8}$/;
+      if (!residencePattern.test(id)) {
+        return { isValid: false, message: '居留證號格式不正確，應為2個英文字母後接8個數字' };
+      }
+      
+      // 英文字母對應的數值
+      const letterMap = {
+        'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15, 'G': 16, 'H': 17,
+        'I': 34, 'J': 18, 'K': 19, 'L': 20, 'M': 21, 'N': 22, 'O': 35, 'P': 23,
+        'Q': 24, 'R': 25, 'S': 26, 'T': 27, 'U': 28, 'V': 29, 'W': 32, 'X': 30,
+        'Y': 31, 'Z': 33
+      };
+      
+      const firstChar = id.charAt(0);
+      const secondChar = id.charAt(1);
+      
+      // 檢查字母是否有效
+      if (!letterMap[firstChar] || !letterMap[secondChar]) {
+        return { isValid: false, message: '無效的英文字母' };
+      }
+      
+      // 計算檢核碼
+      const n1 = Math.floor(letterMap[firstChar] / 10);
+      const n2 = letterMap[firstChar] % 10;
+      const n3 = Math.floor(letterMap[secondChar] / 10);
+      const n4 = letterMap[secondChar] % 10;
+      
+      let sum = n1 * 1 + n2 * 9 + n3 * 8 + n4 * 7;
+      
+      // 計算數字部分的加權總和
+      for (let i = 2; i < 9; i++) {
+        sum += parseInt(id.charAt(i)) * (9 - i);
+      }
+      
+      // 加上最後一位數字
+      sum += parseInt(id.charAt(9));
+      
+      // 檢查是否符合檢核規則
+      if (sum % 10 !== 0) {
+        return { isValid: false, message: '居留證號檢核碼不正確' };
+      }
+      
+      return { isValid: true, message: '居留證號格式正確' };
+    }
+
+    // 新式居留證驗證（2021年後：1個字母 + 8或9 + 8個數字）
+    function validateNewResidentID(id) {
+      id = id.trim().toUpperCase();
+
+      const newARCPattern = /^[A-Z][89]\d{8}$/;
+      if (!newARCPattern.test(id)) {
+        return { isValid: false, message: '新式居留證號格式不正確' };
+      }
+
+      const cityCharMap = {
+        'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15, 'G': 16, 'H': 17,
+        'I': 34, 'J': 18, 'K': 19, 'L': 20, 'M': 21, 'N': 22, 'O': 35, 'P': 23,
+        'Q': 24, 'R': 25, 'S': 26, 'T': 27, 'U': 28, 'V': 29, 'W': 32, 'X': 30,
+        'Y': 31, 'Z': 33
+      };
+
+      const firstChar = id.charAt(0);
+      if (!cityCharMap[firstChar]) {
+        return { isValid: false, message: '無效的英文字母區域碼' };
+      }
+
+      const cityNum = cityCharMap[firstChar];
+      const n1 = Math.floor(cityNum / 10);
+      const n2 = cityNum % 10;
+
+      let sum = n1 * 1 + n2 * 9;
+      for (let i = 1; i <= 8; i++) {
+        sum += parseInt(id.charAt(i)) * (9 - i);
+      }
+      sum += parseInt(id.charAt(9));
+
+      if (sum % 10 !== 0) {
+        return { isValid: false, message: '居留證號檢核碼不正確' };
+      }
+
+      return { isValid: true, message: '新式居留證號格式正確' };
+    }
+
+    // 統一驗證函數 - 自動判斷身分證或居留證（新舊式）
+    function validateIDNumber(input) {
+      const id = input.value.trim().toUpperCase();
+      const errorElement = document.getElementById('holderIdNumberError');
+
+      // 檢查是否為空
+      if (!id) {
+        errorElement.textContent = '請輸入身分證字號或居留證號';
+        errorElement.classList.remove('hidden');
+        return false;
+      }
+
+      // 判斷格式並進行相應驗證
+      let result;
+      if (/^[A-Z][12]\d{8}$/.test(id)) {
+        // 台灣身分證
+        result = validateTaiwanID(id);
+      } else if (/^[A-Z]{2}\d{8}$/.test(id)) {
+        // 舊式居留證（2 個字母 + 8 數字）
+        result = validateResidentID(id);
+      } else if (/^[A-Z][89]\d{8}$/.test(id)) {
+        // 新式居留證（1 個字母 + 8或9 + 8 數字）
+        result = validateNewResidentID(id);
+      } else {
+        errorElement.textContent = '請輸入正確的身分證字號或居留證號格式';
+        errorElement.classList.remove('hidden');
+        return false;
+      }
+
+      // 根據驗證結果顯示相應訊息
+      if (result.isValid) {
+        errorElement.classList.add('hidden');
+        return true;
+      } else {
+        errorElement.textContent = result.message;
+        errorElement.classList.remove('hidden');
+        return false;
+      }
+    }
+
+    // 表單提交處理
+    async function handleSubmit(event) {
+      event.preventDefault();
+      
+      const form = event.target;
+      const noBankAccount = document.getElementById('noBankAccount').checked;
+      const loading = document.getElementById('loading');
+      
+      // 如果未勾選不提供存摺，則進行身分證字號驗證
+      if (!noBankAccount) {
+        const holderIdInput = document.getElementById('holderIdNumber');
+        if (!validateIDNumber(holderIdInput)) {
+          return; // 驗證失敗不繼續提交
+        }
+      }
+      
+      // 顯示載入提示
+      loading.classList.remove('hidden');
+
+      try {
+        // 準備基本資料
+        const bankInfo = {
+          idNumber: currentUser.idNumber,
+          noBankAccount: noBankAccount
+        };
+
+        if (!noBankAccount) {
+          // 驗證存款機構類型
+          const bankTypeEl = document.querySelector('input[name="bankType"]:checked');
+          if (!bankTypeEl) {
+            document.getElementById('bankTypeError').classList.remove('hidden');
+            loading.classList.add('hidden');
+            return;
+          }
+          const bankType = bankTypeEl.value;
+
+          // 驗證郵局或銀行欄位
+          if (bankType === 'post') {
+            const postalCode = document.getElementById('postalCode').value.trim();
+            const postalAccount = document.getElementById('postalAccount').value.trim();
+            if (!postalCode || postalCode.length !== 7) {
+              document.getElementById('postalCodeError').classList.remove('hidden');
+              loading.classList.add('hidden');
+              return;
+            }
+            if (!postalAccount || postalAccount.length !== 7) {
+              document.getElementById('postalAccountError').classList.remove('hidden');
+              loading.classList.add('hidden');
+              return;
+            }
+            bankInfo.bankType = 'post';
+            bankInfo.institution = '郵局';
+            bankInfo.postalCode = postalCode;
+            bankInfo.accountNumber = postalAccount;
+          } else {
+            const bankSelect = document.getElementById('bankSelect').value;
+            const bankAccount = document.getElementById('bankAccount').value.trim();
+            if (!bankSelect) {
+              document.getElementById('bankSelectError').classList.remove('hidden');
+              loading.classList.add('hidden');
+              return;
+            }
+            if (!bankAccount || bankAccount.length < 10 || bankAccount.length > 16) {
+              document.getElementById('bankAccountError').classList.remove('hidden');
+              loading.classList.add('hidden');
+              return;
+            }
+            bankInfo.bankType = 'bank';
+            bankInfo.institution = bankSelect;
+            bankInfo.postalCode = '';
+            bankInfo.accountNumber = bankAccount;
+          }
+
+          bankInfo.accountName = form.accountName.value.trim();
+          bankInfo.holderIdNumber = form.holderIdNumber.value.trim().toUpperCase();
+          bankInfo.relationship = form.relationship.value === '其他監護人'
+            ? '其他監護人-' + form.otherRelationship.value.trim()
+            : form.relationship.value;
+        }
+
+        // 檔案處理
+        const fileInput = document.getElementById('file-upload');
+        if (!noBankAccount && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          const reader = new FileReader();
+          
+          reader.onload = function(e) {
+            const dataUrl = e.target.result;
+            const fileContent = dataUrl.split(',')[1];
+
+            // 提交到伺服器
+            callAPI('saveBankInfo', { data: { ...bankInfo, documentUrl: fileContent } })
+              .then(function(result) {
+                loading.classList.add('hidden');
+                if (result.success) {
+                  const filePreview = document.getElementById('filePreview');
+                  filePreview.innerHTML = `
+                    <div class="text-sm">
+                      <p class="mb-1 text-green-600 font-bold">資料上傳成功！</p>
+                      <img src="${dataUrl}" class="mt-2 max-h-48 mx-auto rounded border border-gray-200">
+                    </div>
+                  `;
+                } else {
+                  alert(result.message || '資料上傳失敗');
+                }
+              })
+              .catch(function(error) {
+                loading.classList.add('hidden');
+                alert('系統發生錯誤：' + error);
+              });
+          };
+          
+          reader.onerror = function(error) {
+            loading.classList.add('hidden');
+            alert('讀取檔案時發生錯誤');
+          };
+          
+          reader.readAsDataURL(file);
+        } else {
+          // 直接提交資料（不需要檔案處理）
+          callAPI('saveBankInfo', { data: bankInfo })
+            .then(function(result) {
+              loading.classList.add('hidden');
+              if (result.success) {
+                alert(noBankAccount ? '已確認選擇現金退款！' : '資料更新成功！');
+                setTimeout(() => { window.location.href = 'index.html'; }, 100);
+              } else {
+                alert(result.message || '資料更新失敗');
+              }
+            })
+            .catch(function(error) {
+              loading.classList.add('hidden');
+              alert('系統發生錯誤：' + error);
+            });
+        }
+      } catch (error) {
+        loading.classList.add('hidden');
+        alert('發生錯誤：' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>
