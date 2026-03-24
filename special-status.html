@@ -88,13 +88,13 @@
             <div class="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
               <h4 class="font-bold text-green-800 mb-3">💰 一、低收入戶 / 中低收入戶</h4>
               <div class="space-y-3">
-                <p class="text-sm text-gray-600 mb-1">請選擇一項（兩者互斥）：</p>
+                <p class="text-sm text-gray-600 mb-1">請勾選符合之項目（兩者互斥，勾其一將自動取消另一項）：</p>
                 <label class="flex items-center space-x-3 cursor-pointer">
-                  <input type="radio" name="incomeType" id="lowIncome" value="low" class="h-4 w-4 text-green-600">
+                  <input type="checkbox" id="lowIncome" class="h-4 w-4 text-green-600">
                   <span>區公所列冊之<strong>低收入戶</strong></span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer">
-                  <input type="radio" name="incomeType" id="middleLowIncome" value="middleLow" class="h-4 w-4 text-green-600">
+                  <input type="checkbox" id="middleLowIncome" class="h-4 w-4 text-green-600">
                   <span>區公所列冊之<strong>中低收入戶</strong></span>
                 </label>
                 <div id="incomeUploadArea" class="hidden mt-2 ml-2">
@@ -455,11 +455,14 @@
       document.getElementById('specialSections').classList.toggle('disabled', this.checked);
     });
 
-    // 低/中低收入戶（互斥 radio）
-    document.querySelectorAll('input[name="incomeType"]').forEach(radio => {
-      radio.addEventListener('change', function() {
-        toggle('incomeUploadArea', true);
-      });
+    // 低/中低收入戶（checkbox 互斥：勾其一自動取消另一）
+    document.getElementById('lowIncome').addEventListener('change', function() {
+      if (this.checked) document.getElementById('middleLowIncome').checked = false;
+      toggle('incomeUploadArea', this.checked || document.getElementById('middleLowIncome').checked);
+    });
+    document.getElementById('middleLowIncome').addEventListener('change', function() {
+      if (this.checked) document.getElementById('lowIncome').checked = false;
+      toggle('incomeUploadArea', this.checked || document.getElementById('lowIncome').checked);
     });
 
     // 原住民
@@ -663,7 +666,7 @@
   function validateForm(isNormal) {
     if (isNormal) return true;
 
-    if (document.querySelector('input[name="incomeType"]:checked')) {
+    if (document.getElementById('lowIncome').checked || document.getElementById('middleLowIncome').checked) {
       if (!document.getElementById('incomeFile').files[0] && !document.querySelector('#incomeFilePreview a'))
         return showToast('請上傳低/中低收入戶證明文件', 'error'), false;
     }
@@ -733,9 +736,8 @@
     const formData = { idNumber: currentUser.idNumber, name: currentUser.name, isNormal };
 
     if (!isNormal) {
-      const incomeRadio = document.querySelector('input[name="incomeType"]:checked');
-      formData.lowIncome       = !!(incomeRadio && incomeRadio.value === 'low');
-      formData.middleLowIncome = !!(incomeRadio && incomeRadio.value === 'middleLow');
+      formData.lowIncome       = document.getElementById('lowIncome').checked;
+      formData.middleLowIncome = document.getElementById('middleLowIncome').checked;
       formData.aboriginal      = document.getElementById('aboriginal').checked;
       formData.aboriginalType  = formData.aboriginal ? document.getElementById('aboriginalType').value : '';
 
