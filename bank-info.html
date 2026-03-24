@@ -300,13 +300,21 @@
     // ===== GAS API 設定 =====
     const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzVZZO75XMjmhpP8YQDrii75vq2K1JmvP3Zf0rbvICoijZDUS7vuUBi8ExcjP7QLaIKwg/exec';
     async function callAPI(action, params) {
+      const token = localStorage.getItem('sessionToken') || '';
+      const sessionUser = localStorage.getItem('currentUser') || '';
       const res = await fetch(GAS_API_URL, {
         method: 'POST',
-        body: JSON.stringify({ action, ...params }),
+        body: JSON.stringify({ action, _token: token, _user: sessionUser, ...params }),
         redirect: 'follow'
       });
       if (!res.ok) throw new Error('網路錯誤 ' + res.status);
-      return res.json();
+      const data = await res.json();
+      if (data.needsRelogin) {
+        localStorage.clear();
+        window.location.href = 'index.html';
+        throw new Error('請重新登入');
+      }
+      return data;
     }
     // ========================
 

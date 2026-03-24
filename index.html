@@ -146,13 +146,21 @@
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzVZZO75XMjmhpP8YQDrii75vq2K1JmvP3Zf0rbvICoijZDUS7vuUBi8ExcjP7QLaIKwg/exec'; // 部署 GAS 後填入 /exec 網址
 
 async function callAPI(action, params) {
+  const token = localStorage.getItem('sessionToken') || '';
+  const sessionUser = localStorage.getItem('currentUser') || '';
   const res = await fetch(GAS_API_URL, {
     method: 'POST',
-    body: JSON.stringify({ action, ...params }),
+    body: JSON.stringify({ action, _token: token, _user: sessionUser, ...params }),
     redirect: 'follow'
   });
   if (!res.ok) throw new Error('網路錯誤 ' + res.status);
-  return res.json();
+  const data = await res.json();
+  if (data.needsRelogin) {
+    localStorage.clear();
+    showLoginSection();
+    throw new Error('請重新登入');
+  }
+  return data;
 }
 // ========================
 
@@ -259,7 +267,8 @@ async function handleLogin() {
       currentUser.name = result.name;
       localStorage.setItem('currentUser', idNumber);
       localStorage.setItem('userName', result.name);
-      
+      localStorage.setItem('sessionToken', result.sessionToken || '');
+
       showMainSection();
       return;
     }
@@ -290,12 +299,6 @@ async function handleLogin() {
   }
 }
 
-// 載入使用者狀態
-function loadUserStatus() {
-  if (!currentUser.idNumber) return Promise.resolve(null);
-  return callAPI('getBatchCompletionStatus', { idNumber: currentUser.idNumber });
-}
-
 // 顯示主要區段
 function showMainSection() {
   // 1. 切換區段顯示
@@ -310,15 +313,12 @@ function showMainSection() {
   modulesGrid.classList.add('hidden');
   moduleLoadingIndicator.classList.remove('hidden');
   
-  // 3. 同時載入功能權限 + 完成狀態
-  const permissionsPromise = callAPI('getStudentPermissions', { idNumber: currentUser.idNumber })
-    .then(res => { studentPermissions = (res && res.permissions) ? res.permissions : null; })
-    .catch(() => {});
-
-  Promise.all([loadUserStatus(), permissionsPromise])
-    .then(([status]) => {
+  // 3. 一次 API 取得完成狀態 + 功能權限（含 60 秒快取）
+  callAPI('getDashboardData', { idNumber: currentUser.idNumber })
+    .then(result => {
+      if (result && result.permissions) studentPermissions = result.permissions;
       renderModules();
-      if (status) updateModuleStatus(status);
+      if (result && result.status) updateModuleStatus(result.status);
       moduleLoadingIndicator.classList.add('hidden');
       modulesGrid.classList.remove('hidden');
     })
@@ -414,6 +414,7 @@ async function handleModuleClick(moduleId) {
 function handleLogout() {
   localStorage.removeItem('currentUser');
   localStorage.removeItem('userName');
+  localStorage.removeItem('sessionToken');
 
   currentUser = { idNumber: '', name: '' };
   studentPermissions = null;
