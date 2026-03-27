@@ -453,12 +453,12 @@
               // 顯示已上傳的存摺照片
               if (result.data.documentUrl) {
                 const filePreview = document.getElementById('filePreview');
-                const fileId = extractDriveFileId(result.data.documentUrl);
-                const thumbUrl = fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w300` : null;
+                const imgSrc = result.data.documentThumb ||
+                  (() => { const id = extractDriveFileId(result.data.documentUrl); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w300` : null; })();
                 filePreview.innerHTML = `
                   <div class="text-sm">
                     <p class="mb-1 text-gray-600">目前已上傳的照片：</p>
-                    ${thumbUrl ? `<img src="${thumbUrl}" class="mt-2 max-h-48 mx-auto rounded border border-gray-200" onerror="this.style.display='none'">` : ''}
+                    ${imgSrc ? `<img src="${imgSrc}" class="mt-2 max-h-48 mx-auto rounded border border-gray-200" onerror="this.style.display='none'">` : ''}
                     <a href="${result.data.documentUrl}" target="_blank"
                        class="text-blue-600 hover:text-blue-800 underline block mt-2">
                       查看原始照片

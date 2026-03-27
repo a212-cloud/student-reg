@@ -197,31 +197,42 @@
       document.getElementById('userIdNumber').textContent = currentUser.idNumber;
       document.getElementById('userName').textContent = currentUser.name;
 
-      // 載入既有照片
+      // 載入既有照片（含 sessionStorage 快取）
+      const photoCacheKey = 'photo_' + currentUser.idNumber;
+      const photoCached = sessionStorage.getItem(photoCacheKey);
+      if (photoCached) {
+        try { applyPhotoData(JSON.parse(photoCached)); return; } catch(e) {}
+      }
       callAPI('getStudentPhoto', { idNumber: currentUser.idNumber })
         .then(function(result) {
           if (result.success && result.photoUrl) {
-            const previewContainer = document.getElementById('previewContainer');
-            const fileId = extractDriveFileId(result.photoUrl);
-            const thumbUrl = fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w300` : null;
-            previewContainer.innerHTML = `
-              <div class="text-sm text-gray-600">
-                <p class="mb-1">目前已上傳的照片：</p>
-                ${thumbUrl ? `<img src="${thumbUrl}" class="mt-2 max-h-48 mx-auto rounded border border-gray-200" onerror="this.style.display='none'">` : ''}
-                <a href="${result.photoUrl}" target="_blank"
-                   class="text-blue-600 hover:text-blue-800 underline block mt-2">
-                  查看原始照片
-                </a>
-                <p class="mt-1 text-yellow-600">
-                  ※ 如需更新照片，請重新上傳新的照片即可
-                </p>
-              </div>
-            `;
+            try { sessionStorage.setItem(photoCacheKey, JSON.stringify(result)); } catch(e) {}
+            applyPhotoData(result);
           }
         })
         .catch(function(error) {
           console.error('載入照片失敗：', error);
         });
+    }
+
+    function applyPhotoData(result) {
+      if (!result || !result.photoUrl) return;
+      const previewContainer = document.getElementById('previewContainer');
+      const imgSrc = result.photoThumb ||
+        (() => { const id = extractDriveFileId(result.photoUrl); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w300` : null; })();
+      previewContainer.innerHTML = `
+        <div class="text-sm text-gray-600">
+          <p class="mb-1">目前已上傳的照片：</p>
+          ${imgSrc ? `<img src="${imgSrc}" class="mt-2 max-h-48 mx-auto rounded border border-gray-200" onerror="this.style.display='none'">` : ''}
+          <a href="${result.photoUrl}" target="_blank"
+             class="text-blue-600 hover:text-blue-800 underline block mt-2">
+            查看原始照片
+          </a>
+          <p class="mt-1 text-yellow-600">
+            ※ 如需更新照片，請重新上傳新的照片即可
+          </p>
+        </div>
+      `;
     }
 
     // 設置事件監聽器
@@ -364,6 +375,7 @@
           })
             .then(function(response) {
               if (response.success) {
+                try { sessionStorage.removeItem('photo_' + currentUser.idNumber); } catch(e) {}
                 const previewContainer = document.getElementById('previewContainer');
                 previewContainer.innerHTML = `
                   <div class="text-sm text-gray-600">
