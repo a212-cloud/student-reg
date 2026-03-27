@@ -130,9 +130,27 @@
 
     // 載入班級資訊
     function loadClassInfo() {
+      const cacheKey = 'class_' + currentUser.idNumber;
+      const raw = sessionStorage.getItem(cacheKey);
+      if (raw) {
+        try { applyClassData(JSON.parse(raw)); return; } catch(e) {}
+      }
       callAPI('getDetailedClassInfo', { idNumber: currentUser.idNumber })
         .then(function(result) {
           if (result.success) {
+            try { sessionStorage.setItem(cacheKey, JSON.stringify(result)); } catch(e) {}
+            applyClassData(result);
+          } else {
+            alert(result.message || '載入班級資訊失敗');
+          }
+        })
+        .catch(function(error) {
+          alert('系統發生錯誤：' + error);
+        });
+    }
+
+    function applyClassData(result) {
+      if (result.success) {
             // 更新臨時編班資訊
             document.getElementById('tempClass').textContent = 
               result.tempClass ? `${result.tempClass}班` : '尚未編班';
@@ -172,13 +190,7 @@
                 </div>
               `;
             }
-          } else {
-            alert(result.message || '載入班級資訊失敗');
-          }
-        })
-        .catch(function(error) {
-          alert('系統發生錯誤：' + error);
-        });
+      }
     }
 
     // 返回主選單

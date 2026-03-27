@@ -272,6 +272,8 @@ async function handleLogin() {
       try { sessionStorage.setItem('dash_' + idNumber, JSON.stringify(result.dashboardData)); } catch(e) {}
 
       showMainSection(result.dashboardData);
+      // 登入後靜默預熱所有模組的 Server 快取，讓學生第一次點進去時秒回
+      prewarmModuleCaches(idNumber);
       return;
     }
     
@@ -354,6 +356,17 @@ function showMainSection(prefetchedData) {
         alert('載入狀態失敗，請重新整理頁面');
       });
   }
+}
+
+// 登入後靜默預熱所有模組的 Server 端 CacheService
+// 使用 1.5 秒延遲，等主畫面渲染完再開始，不影響登入速度
+function prewarmModuleCaches(idNumber) {
+  setTimeout(function() {
+    ['getSpecialStatus', 'getDetailedClassInfo', 'getStudentPhoto', 'getBankInfo', 'getPersonalInfo']
+      .forEach(function(action) {
+        callAPI(action, { idNumber: idNumber }).catch(function() {});
+      });
+  }, 1500);
 }
 
 // 渲染模組
