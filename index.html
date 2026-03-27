@@ -269,6 +269,7 @@ async function handleLogin() {
       localStorage.setItem('userName', result.name);
       localStorage.setItem('sessionToken', result.sessionToken || '');
       localStorage.setItem('userBirthDate', result.birthDate || '');
+      try { sessionStorage.setItem('dash_' + idNumber, JSON.stringify(result.dashboardData)); } catch(e) {}
 
       showMainSection(result.dashboardData);
       return;
@@ -300,10 +301,8 @@ async function handleLogin() {
   }
 }
 
-// 顯示主要區段
-// prefetchedData: 登入時回傳的 dashboardData（可選，有則直接用，無則再打一次 API）
+// 顯示主要區段（Stale-while-revalidate：有快取立即顯示，背景靜默更新）
 function showMainSection(prefetchedData) {
-  // 1. 切換區段顯示
   document.getElementById('loginSection').classList.add('hidden');
   document.getElementById('mainSection').classList.remove('hidden');
   document.getElementById('userName').textContent = currentUser.name;
@@ -311,34 +310,50 @@ function showMainSection(prefetchedData) {
   const modulesGrid = document.getElementById('modulesGrid');
   const moduleLoadingIndicator = document.getElementById('moduleLoadingIndicator');
 
-  function applyDashboard(result) {
-    if (result && result.permissions) studentPermissions = result.permissions;
+  function applyDashboard(result, saveCache) {
+    if (!result) return;
+    if (result.permissions) studentPermissions = result.permissions;
     renderModules();
-    if (result && result.status) updateModuleStatus(result.status);
+    if (result.status) updateModuleStatus(result.status);
     moduleLoadingIndicator.classList.add('hidden');
     modulesGrid.classList.remove('hidden');
+    if (saveCache) {
+      try { sessionStorage.setItem('dash_' + currentUser.idNumber, JSON.stringify(result)); } catch(e) {}
+    }
   }
 
-  // 2. 若登入時已帶回資料，直接套用（零額外 API）
-  if (prefetchedData && prefetchedData.status) {
+  // 找可用的快取資料（登入帶回 or sessionStorage）
+  let cached = prefetchedData;
+  if (!cached || !cached.status) {
+    try {
+      const raw = sessionStorage.getItem('dash_' + currentUser.idNumber);
+      if (raw) cached = JSON.parse(raw);
+    } catch(e) {}
+  }
+
+  if (cached && cached.status) {
+    // 立即顯示快取（零等待）
     modulesGrid.classList.add('hidden');
     moduleLoadingIndicator.classList.remove('hidden');
-    applyDashboard(prefetchedData);
-    return;
+    applyDashboard(cached, false);
+    // 背景靜默更新（不顯示 loading），確保完成狀態是最新的
+    callAPI('getDashboardData', { idNumber: currentUser.idNumber })
+      .then(result => applyDashboard(result, true))
+      .catch(() => {});
+  } else {
+    // 完全沒有快取才顯示 loading
+    modulesGrid.classList.add('hidden');
+    moduleLoadingIndicator.classList.remove('hidden');
+    callAPI('getDashboardData', { idNumber: currentUser.idNumber })
+      .then(result => applyDashboard(result, true))
+      .catch(error => {
+        console.error('載入使用者狀態失敗:', error);
+        renderModules();
+        moduleLoadingIndicator.classList.add('hidden');
+        modulesGrid.classList.remove('hidden');
+        alert('載入狀態失敗，請重新整理頁面');
+      });
   }
-
-  // 3. 重新整理時從快取或 API 取得
-  modulesGrid.classList.add('hidden');
-  moduleLoadingIndicator.classList.remove('hidden');
-  callAPI('getDashboardData', { idNumber: currentUser.idNumber })
-    .then(applyDashboard)
-    .catch(error => {
-      console.error('載入使用者狀態失敗:', error);
-      renderModules();
-      moduleLoadingIndicator.classList.add('hidden');
-      modulesGrid.classList.remove('hidden');
-      alert('載入狀態失敗，請重新整理頁面');
-    });
 }
 
 // 渲染模組
@@ -422,6 +437,7 @@ async function handleModuleClick(moduleId) {
 
 // 登出處理
 function handleLogout() {
+  try { sessionStorage.removeItem('dash_' + currentUser.idNumber); } catch(e) {}
   localStorage.removeItem('currentUser');
   localStorage.removeItem('userName');
   localStorage.removeItem('sessionToken');
