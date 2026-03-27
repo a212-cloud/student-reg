@@ -567,9 +567,10 @@
     });
   }
 
-  function showExistingFile(previewId, url, label) {
+  function showExistingFile(previewId, url, label, thumbSrc) {
     document.getElementById(previewId).innerHTML =
-      `<a href="${url}" target="_blank" class="text-blue-600 text-sm">📄 查看${label}</a>
+      `${thumbSrc ? `<img src="${thumbSrc}" class="mt-1 mb-2 max-h-32 rounded border border-gray-200 block" onerror="this.style.display='none'">` : ''}
+       <a href="${url}" target="_blank" class="text-blue-600 text-sm">📄 查看${label}</a>
        <p class="text-yellow-600 text-xs mt-1">※ 如需更新，請重新上傳</p>`;
   }
 
@@ -586,11 +587,11 @@
         if (d.lowIncome) {
           document.getElementById('lowIncome').checked = true;
           toggle('incomeUploadArea', true);
-          if (d.incomeDocUrl) showExistingFile('incomeFilePreview', d.incomeDocUrl, '低收入戶證明');
+          if (d.incomeDocUrl) showExistingFile('incomeFilePreview', d.incomeDocUrl, '低收入戶證明', d.incomeDocThumb);
         } else if (d.middleLowIncome) {
           document.getElementById('middleLowIncome').checked = true;
           toggle('incomeUploadArea', true);
-          if (d.incomeDocUrl) showExistingFile('incomeFilePreview', d.incomeDocUrl, '中低收入戶證明');
+          if (d.incomeDocUrl) showExistingFile('incomeFilePreview', d.incomeDocUrl, '中低收入戶證明', d.incomeDocThumb);
         }
 
         // 原住民
@@ -598,7 +599,7 @@
         if (d.aboriginal) {
           toggle('aboriginalDetails', true);
           document.getElementById('aboriginalType').value = d.aboriginalType || '';
-          if (d.aboriginalFileUrl) showExistingFile('aboriginalFilePreview', d.aboriginalFileUrl, '戶口名簿');
+          if (d.aboriginalFileUrl) showExistingFile('aboriginalFilePreview', d.aboriginalFileUrl, '戶口名簿', d.aboriginalFileThumb);
         }
 
         // 學生身心障礙
@@ -609,7 +610,7 @@
           document.getElementById('studentDisabilityType').value = d.studentDisabilityType || '';
           if (d.studentDisabilityUrl) {
             toggle('studentDisabilityDocArea', true);
-            document.getElementById('studentDisabilityLink').href = d.studentDisabilityUrl;
+            showExistingFile('studentDisabilityDocArea', d.studentDisabilityUrl, '已上傳的證明文件', d.studentDisabilityThumb);
           }
         }
 
@@ -621,7 +622,7 @@
           document.getElementById('parentDisabilityType').value = d.parentDisabilityType || '';
           if (d.parentDisabilityUrl) {
             toggle('parentDisabilityDocArea', true);
-            document.getElementById('parentDisabilityLink').href = d.parentDisabilityUrl;
+            showExistingFile('parentDisabilityDocArea', d.parentDisabilityUrl, '已上傳的證明文件', d.parentDisabilityThumb);
           }
         }
 
@@ -661,14 +662,14 @@
         document.getElementById('overseas').checked = !!d.overseas;
         if (d.overseas) {
           toggle('overseasDetails', true);
-          if (d.overseasDocUrl) showExistingFile('overseasFilePreview', d.overseasDocUrl, '僑委會公文');
+          if (d.overseasDocUrl) showExistingFile('overseasFilePreview', d.overseasDocUrl, '僑委會公文', d.overseasDocThumb);
         }
 
         // 港澳生
         document.getElementById('hongKongMacao').checked = !!d.hongKongMacao;
         if (d.hongKongMacao) {
           toggle('hongKongMacaoDetails', true);
-          if (d.hongKongMacaoDocUrl) showExistingFile('hongKongMacaoFilePreview', d.hongKongMacaoDocUrl, '居留證/護照');
+          if (d.hongKongMacaoDocUrl) showExistingFile('hongKongMacaoFilePreview', d.hongKongMacaoDocUrl, '居留證/護照', d.hongKongMacaoDocThumb);
         }
 
         // 雙重國籍
@@ -689,7 +690,7 @@
         document.getElementById('governmentOverseas').checked = !!d.governmentOverseas;
         if (d.governmentOverseas) {
           toggle('governmentOverseasDetails', true);
-          if (d.governmentOverseasDocUrl) showExistingFile('governmentOverseasFilePreview', d.governmentOverseasDocUrl, '政府派外證明');
+          if (d.governmentOverseasDocUrl) showExistingFile('governmentOverseasFilePreview', d.governmentOverseasDocUrl, '政府派外證明', d.governmentOverseasDocThumb);
         }
 
         // 外籍生
@@ -707,7 +708,7 @@
           }
           if (d.foreignStudentDocUrl) {
             toggle('foreignStudentDocArea', true);
-            document.getElementById('foreignStudentLink').href = d.foreignStudentDocUrl;
+            showExistingFile('foreignStudentDocArea', d.foreignStudentDocUrl, '已上傳的證明文件', d.foreignStudentDocThumb);
           }
         }
 
@@ -717,7 +718,7 @@
           toggle('mainlandChinaDetails', true);
           if (d.mainlandChinaDocUrl) {
             toggle('mainlandChinaDocArea', true);
-            document.getElementById('mainlandChinaLink').href = d.mainlandChinaDocUrl;
+            showExistingFile('mainlandChinaDocArea', d.mainlandChinaDocUrl, '已上傳的證明文件', d.mainlandChinaDocThumb);
           }
         }
   }
