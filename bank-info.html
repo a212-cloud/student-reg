@@ -354,15 +354,37 @@
       document.getElementById('studentName').textContent = currentUser.name;
 
       // 載入既有的存摺資料
+      const bankCacheKey = 'bank_' + currentUser.idNumber;
+      const bankCached = sessionStorage.getItem(bankCacheKey);
+      if (bankCached) {
+        try { applyBankData(JSON.parse(bankCached)); return; } catch(e) {}
+      }
+
       const loadingIndicator = document.getElementById('loading');
       loadingIndicator.classList.remove('hidden');
-      
+
       callAPI('getBankInfo', { idNumber: currentUser.idNumber })
         .then(function(result) {
-          console.log('載入存摺資料結果:', result);
           loadingIndicator.classList.add('hidden');
-          
+
           if (result.success) {
+            try { sessionStorage.setItem(bankCacheKey, JSON.stringify(result.data)); } catch(e) {}
+            applyBankData(result.data);
+          } else {
+            console.log('載入資料失敗:', result.message);
+          }
+        })
+        .catch(function(error) {
+          console.error('載入資料失敗：', error);
+          loadingIndicator.classList.add('hidden');
+          alert('載入資料時發生錯誤，請稍後再試');
+        });
+    }
+
+    function applyBankData(data) {
+      if (!data) return;
+      const result = { success: true, data };
+      if (result.success) {
             const noBankAccountCheckbox = document.getElementById('noBankAccount');
             const bankInfoFields = document.getElementById('bankInfoFields');
             const submitButton = document.querySelector('button[type="submit"]');
@@ -448,15 +470,7 @@
                 `;
               }
             }
-          } else {
-            console.log('載入資料失敗:', result.message);
-          }
-        })
-        .catch(function(error) {
-          console.error('載入資料失敗：', error);
-          loadingIndicator.classList.add('hidden');
-          alert('載入資料時發生錯誤，請稍後再試');
-        });
+      }
     }
 
     // 設置事件監聽器
@@ -939,6 +953,7 @@
               .then(function(result) {
                 loading.classList.add('hidden');
                 if (result.success) {
+                  try { sessionStorage.removeItem('bank_' + currentUser.idNumber); } catch(e) {}
                   const filePreview = document.getElementById('filePreview');
                   filePreview.innerHTML = `
                     <div class="text-sm">
@@ -968,6 +983,7 @@
             .then(function(result) {
               loading.classList.add('hidden');
               if (result.success) {
+                try { sessionStorage.removeItem('bank_' + currentUser.idNumber); } catch(e) {}
                 alert(noBankAccount ? '已確認選擇現金退款！' : '資料更新成功！');
                 setTimeout(() => { window.location.href = 'index.html'; }, 100);
               } else {

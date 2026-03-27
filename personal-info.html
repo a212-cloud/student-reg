@@ -433,117 +433,89 @@
 
     // 檢查登入狀態
     function checkLoginStatus() {
-      console.log('開始檢查登入狀態');
       currentUser.idNumber = localStorage.getItem('currentUser');
       currentUser.name = localStorage.getItem('userName');
-      
-      console.log('目前使用者資訊:', currentUser);
-      
-      if (!currentUser.idNumber || !currentUser.name) {
-        console.log('未找到使用者資訊，準備返回主頁');
-        handleBack();
-        return;
-      }
-
-      // 顯示學生資料
+      if (!currentUser.idNumber || !currentUser.name) { handleBack(); return; }
       document.getElementById('userIdNumber').textContent = currentUser.idNumber;
       document.getElementById('userName').textContent = currentUser.name;
-      
-      // 從後端獲取生日
-      callAPI('getStudentBirthDate', { idNumber: currentUser.idNumber })
-        .then(response => {
-          if (response.success) {
-            document.getElementById('birthDate').textContent = response.birthDate || '';
-          }
-        })
-        .catch(err => console.error('取得生日失敗:', err));
+      // 生日直接從 localStorage 讀取（登入時已存入，無需另發 API）
+      document.getElementById('birthDate').textContent = localStorage.getItem('userBirthDate') || '';
+    }
+
+    // 將資料填入表單
+    function applyFormData(d) {
+      document.getElementById('studentPhone').value = d.studentPhone || '';
+      document.getElementById('fatherName').value = d.fatherName || '';
+      document.getElementById('fatherPhone').value = d.fatherPhone || '';
+      document.getElementById('motherName').value = d.motherName || '';
+      document.getElementById('motherPhone').value = d.motherPhone || '';
+      document.getElementById('guardianName').value = d.guardianName || '';
+      document.getElementById('guardianPhone').value = d.guardianPhone || '';
+      const guardianRelation = d.guardianRelation || '';
+      if (guardianRelation.startsWith('其他-')) {
+        document.getElementById('guardianRelation').value = '其他';
+        document.getElementById('otherRelationInput').classList.remove('hidden');
+        document.getElementById('otherRelationDetail').value = guardianRelation.substring(3);
+      } else {
+        document.getElementById('guardianRelation').value = guardianRelation;
+      }
+      document.getElementById('registeredAddress').value = d.registeredAddress || '';
+      document.getElementById('contactAddress').value = d.contactAddress || '';
+      document.getElementById('graduatedSchool').value = d.graduatedSchool || '';
+      if (d.homePhone) {
+        const [area, number] = d.homePhone.split('-');
+        document.getElementById('homePhoneArea').value = area || '';
+        document.getElementById('homePhoneNumber').value = number || '';
+      }
+      if (d.guardianName && d.guardianPhone) {
+        if (d.guardianName === d.fatherName && d.guardianPhone === d.fatherPhone) {
+          document.querySelector('input[name="guardianSource"][value="father"]').checked = true;
+          document.getElementById('guardianName').readOnly = true;
+          document.getElementById('guardianPhone').readOnly = true;
+        } else if (d.guardianName === d.motherName && d.guardianPhone === d.motherPhone) {
+          document.querySelector('input[name="guardianSource"][value="mother"]').checked = true;
+          document.getElementById('guardianName').readOnly = true;
+          document.getElementById('guardianPhone').readOnly = true;
+        } else {
+          document.querySelector('input[name="guardianSource"][value="other"]').checked = true;
+        }
+      }
+      if (d.registeredAddress && d.contactAddress && d.registeredAddress === d.contactAddress) {
+        document.getElementById('sameAsRegistered').checked = true;
+        document.getElementById('contactAddress').disabled = true;
+      }
+      handleGuardianRelationChange();
+      document.getElementById('loadingMessage').classList.add('hidden');
+      document.getElementById('personalInfoForm').classList.remove('hidden');
     }
 
     // 設置表單
     function setupForm() {
-      console.log('開始設置表單內容');
+      document.getElementById('personalInfoForm').onsubmit = handleSubmit;
 
+      // 有 sessionStorage 快取時立刻填入，不等 API
+      const cacheKey = 'pi_' + currentUser.idNumber;
+      const raw = sessionStorage.getItem(cacheKey);
+      if (raw) {
+        try { applyFormData(JSON.parse(raw)); return; } catch(e) {}
+      }
+
+      // 無快取：顯示 loading，呼叫 API
+      document.getElementById('loadingMessage').classList.remove('hidden');
       callAPI('getPersonalInfo', { idNumber: currentUser.idNumber })
         .then(function(response) {
-          
-          if (response.success && response.data) {
-            console.log('開始填入表單資料:', response.data);
-            // 填入表單資料
-            document.getElementById('studentPhone').value = response.data.studentPhone || '';
-            document.getElementById('fatherName').value = response.data.fatherName || '';
-            document.getElementById('fatherPhone').value = response.data.fatherPhone || '';
-            document.getElementById('motherName').value = response.data.motherName || '';
-            document.getElementById('motherPhone').value = response.data.motherPhone || '';
-            document.getElementById('guardianName').value = response.data.guardianName || '';
-            document.getElementById('guardianPhone').value = response.data.guardianPhone || '';
-
-            // 處理監護人關係
-            const guardianRelation = response.data.guardianRelation || '';
-            if (guardianRelation.startsWith('其他-')) {
-              document.getElementById('guardianRelation').value = '其他';
-              document.getElementById('otherRelationInput').classList.remove('hidden');
-              document.getElementById('otherRelationDetail').value = guardianRelation.substring(3);
-            } else {
-              document.getElementById('guardianRelation').value = guardianRelation;
-            }
-
-            document.getElementById('registeredAddress').value = response.data.registeredAddress || '';
-            document.getElementById('contactAddress').value = response.data.contactAddress || '';
-            document.getElementById('graduatedSchool').value = response.data.graduatedSchool || '';
-
-            // 處理市話號碼
-            if (response.data.homePhone) {
-              console.log('處理市話號碼:', response.data.homePhone);
-              const [area, number] = response.data.homePhone.split('-');
-              document.getElementById('homePhoneArea').value = area || '';
-              document.getElementById('homePhoneNumber').value = number || '';
-            }
-
-            // 檢查監護人資料是否與父母親相同
-            if (response.data.guardianName && response.data.guardianPhone) {
-              console.log('檢查監護人資料對應');
-              if (response.data.guardianName === response.data.fatherName && 
-                  response.data.guardianPhone === response.data.fatherPhone) {
-                document.querySelector('input[name="guardianSource"][value="father"]').checked = true;
-                document.getElementById('guardianName').readOnly = true;
-                document.getElementById('guardianPhone').readOnly = true;
-                console.log('監護人資料與父親相同');
-              } else if (response.data.guardianName === response.data.motherName && 
-                        response.data.guardianPhone === response.data.motherPhone) {
-                document.querySelector('input[name="guardianSource"][value="mother"]').checked = true;
-                document.getElementById('guardianName').readOnly = true;
-                document.getElementById('guardianPhone').readOnly = true;
-                console.log('監護人資料與母親相同');
-              } else {
-                document.querySelector('input[name="guardianSource"][value="other"]').checked = true;
-                console.log('監護人資料為獨立填寫');
-              }
-            }
-
-            // 檢查位址是否相同
-            if (response.data.registeredAddress && 
-                response.data.contactAddress && 
-                response.data.registeredAddress === response.data.contactAddress) {
-              document.getElementById('sameAsRegistered').checked = true;
-              document.getElementById('contactAddress').disabled = true;
-              console.log('聯絡位址與戶籍位址相同');
-            }
-
-            // 觸發監護人關係選擇變更事件
-            handleGuardianRelationChange();
+          if (response.success && response.data && Object.keys(response.data).length > 0) {
+            try { sessionStorage.setItem(cacheKey, JSON.stringify(response.data)); } catch(e) {}
+            applyFormData(response.data);
+          } else {
+            document.getElementById('loadingMessage').classList.add('hidden');
+            document.getElementById('personalInfoForm').classList.remove('hidden');
           }
-          
-          document.getElementById('loadingMessage').classList.add('hidden');
-          document.getElementById('personalInfoForm').classList.remove('hidden');
-          console.log('表單設置完成');
         })
         .catch(function(error) {
-          console.error('載入個人資料失敗:', error);
           document.getElementById('loadingMessage').textContent = '載入失敗，但您仍可填寫表單';
           document.getElementById('personalInfoForm').classList.remove('hidden');
         });
-
-      document.getElementById('personalInfoForm').onsubmit = handleSubmit;
     }
 
     // 處理表單提交
@@ -603,6 +575,7 @@ const data = {
       callAPI('savePersonalInfo', { data })
         .then(function(response) {
           if (response.success) {
+            try { sessionStorage.removeItem('pi_' + currentUser.idNumber); } catch(e) {}
             showToast('資料儲存成功！');
             document.getElementById('loadingMessage').classList.add('hidden');
             document.getElementById('personalInfoForm').classList.remove('hidden');

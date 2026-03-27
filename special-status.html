@@ -248,6 +248,10 @@
                     <input type="text" id="foreignFatherNationalityOther"
                            class="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm hidden"
                            placeholder="請填寫父親國籍">
+                    <label class="flex items-center space-x-2 cursor-pointer mt-2">
+                      <input type="checkbox" id="foreignFatherTaiwanId" class="h-4 w-4 text-red-600">
+                      <span class="text-sm text-gray-700">父親已取得<strong>台灣身份證</strong></span>
+                    </label>
                   </div>
                 </div>
 
@@ -272,6 +276,10 @@
                     <input type="text" id="foreignMotherNationalityOther"
                            class="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm hidden"
                            placeholder="請填寫母親國籍">
+                    <label class="flex items-center space-x-2 cursor-pointer mt-2">
+                      <input type="checkbox" id="foreignMotherTaiwanId" class="h-4 w-4 text-red-600">
+                      <span class="text-sm text-gray-700">母親已取得<strong>台灣身份證</strong></span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -315,24 +323,39 @@
                     <span>學生具<strong>雙重國籍</strong></span>
                   </label>
                   <div id="dualNationalityDetails" class="ml-6 mt-3 space-y-3 hidden">
-                    <p class="text-sm text-gray-600">請上傳兩本護照封面照片，並填寫第二國籍</p>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">第一本護照封面（中華民國護照）<span class="text-red-500">*</span></label>
-                      <input type="file" id="passport1File" accept="image/*" class="w-full text-sm">
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">第二本護照封面（外國護照）<span class="text-red-500">*</span></label>
-                      <input type="file" id="passport2File" accept="image/*" class="w-full text-sm">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">第一國籍 <span class="text-red-500">*</span></label>
+                      <select id="firstNationality" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                        <option value="">請選擇國籍</option>
+                        <option>中華民國</option>
+                        <option>中國（大陸）</option><option>港澳（香港/澳門）</option>
+                        <option>越南</option><option>印尼</option><option>泰國</option>
+                        <option>菲律賓</option><option>柬埔寨</option><option>馬來西亞</option>
+                        <option>緬甸</option><option>南韓</option><option>新加坡</option>
+                        <option>日本</option><option>美國</option><option>加拿大</option>
+                        <option>澳洲</option><option>埃及</option><option>巴基斯坦</option>
+                        <option value="其他">其他（請填寫）</option>
+                      </select>
+                      <input type="text" id="firstNationalityOther"
+                             class="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm hidden"
+                             placeholder="請填寫第一國籍">
                     </div>
                     <div>
                       <label class="block text-sm font-medium text-gray-700 mb-1">第二國籍 <span class="text-red-500">*</span></label>
-                      <input type="text" id="secondNationality"
-                             class="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                             placeholder="請填寫第二國籍國家名稱">
-                    </div>
-                    <div id="dualNationalityDocArea" class="hidden">
-                      <a id="passport1Link" href="#" target="_blank" class="text-blue-600 text-sm block">📄 查看已上傳的護照1</a>
-                      <a id="passport2Link" href="#" target="_blank" class="text-blue-600 text-sm block mt-1">📄 查看已上傳的護照2</a>
+                      <select id="secondNationality" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                        <option value="">請選擇國籍</option>
+                        <option>中華民國</option>
+                        <option>中國（大陸）</option><option>港澳（香港/澳門）</option>
+                        <option>越南</option><option>印尼</option><option>泰國</option>
+                        <option>菲律賓</option><option>柬埔寨</option><option>馬來西亞</option>
+                        <option>緬甸</option><option>南韓</option><option>新加坡</option>
+                        <option>日本</option><option>美國</option><option>加拿大</option>
+                        <option>澳洲</option><option>埃及</option><option>巴基斯坦</option>
+                        <option value="其他">其他（請填寫）</option>
+                      </select>
+                      <input type="text" id="secondNationalityOther"
+                             class="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm hidden"
+                             placeholder="請填寫第二國籍">
                     </div>
                   </div>
                 </div>
@@ -516,6 +539,14 @@
     document.getElementById('overseas').addEventListener('change', function() { toggle('overseasDetails', this.checked); });
     document.getElementById('hongKongMacao').addEventListener('change', function() { toggle('hongKongMacaoDetails', this.checked); });
     document.getElementById('dualNationality').addEventListener('change', function() { toggle('dualNationalityDetails', this.checked); });
+    document.getElementById('firstNationality').addEventListener('change', function() {
+      toggle('firstNationalityOther', this.value === '其他');
+      if (this.value !== '其他') document.getElementById('firstNationalityOther').value = '';
+    });
+    document.getElementById('secondNationality').addEventListener('change', function() {
+      toggle('secondNationalityOther', this.value === '其他');
+      if (this.value !== '其他') document.getElementById('secondNationalityOther').value = '';
+    });
     document.getElementById('governmentOverseas').addEventListener('change', function() { toggle('governmentOverseasDetails', this.checked); });
     document.getElementById('foreignStudent').addEventListener('change', function() { toggle('foreignStudentDetails', this.checked); });
     document.getElementById('foreignStudentNationality').addEventListener('change', function() {
@@ -542,15 +573,11 @@
        <p class="text-yellow-600 text-xs mt-1">※ 如需更新，請重新上傳</p>`;
   }
 
-  function loadExistingData() {
-    document.getElementById('loadingMessage').classList.remove('hidden');
-    callAPI('getSpecialStatus', { idNumber: currentUser.idNumber })
-      .then(function(res) {
-        document.getElementById('loadingMessage').classList.add('hidden');
-        if (!res.success || !res.data) return;
-        const d = res.data;
+  function applySpecialData(d) {
+    document.getElementById('loadingMessage').classList.add('hidden');
+    if (!d) return;
 
-        if (d.isNormal) {
+    if (d.isNormal) {
           document.getElementById('isNormal').checked = true;
           document.getElementById('specialSections').classList.add('disabled');
         }
@@ -611,6 +638,7 @@
             document.getElementById('foreignFatherNationalityOther').value = nat;
             toggle('foreignFatherNationalityOther', true);
           }
+          document.getElementById('foreignFatherTaiwanId').checked = !!d.foreignFatherTaiwanId;
         }
 
         // 外籍母
@@ -626,6 +654,7 @@
             document.getElementById('foreignMotherNationalityOther').value = nat;
             toggle('foreignMotherNationalityOther', true);
           }
+          document.getElementById('foreignMotherTaiwanId').checked = !!d.foreignMotherTaiwanId;
         }
 
         // 僑生
@@ -646,12 +675,14 @@
         document.getElementById('dualNationality').checked = !!d.dualNationality;
         if (d.dualNationality) {
           toggle('dualNationalityDetails', true);
-          document.getElementById('secondNationality').value = d.secondNationality || '';
-          if (d.passport1Url || d.passport2Url) {
-            toggle('dualNationalityDocArea', true);
-            if (d.passport1Url) document.getElementById('passport1Link').href = d.passport1Url;
-            if (d.passport2Url) document.getElementById('passport2Link').href = d.passport2Url;
-          }
+          const sel1 = document.getElementById('firstNationality');
+          const nat1 = d.firstNationality || '';
+          if (Array.from(sel1.options).some(o => o.value === nat1)) { sel1.value = nat1; }
+          else if (nat1) { sel1.value = '其他'; document.getElementById('firstNationalityOther').value = nat1; toggle('firstNationalityOther', true); }
+          const sel2 = document.getElementById('secondNationality');
+          const nat2 = d.secondNationality || '';
+          if (Array.from(sel2.options).some(o => o.value === nat2)) { sel2.value = nat2; }
+          else if (nat2) { sel2.value = '其他'; document.getElementById('secondNationalityOther').value = nat2; toggle('secondNationalityOther', true); }
         }
 
         // 政府派外
@@ -689,6 +720,21 @@
             document.getElementById('mainlandChinaLink').href = d.mainlandChinaDocUrl;
           }
         }
+  }
+
+  function loadExistingData() {
+    const cacheKey = 'ss_' + currentUser.idNumber;
+    const raw = sessionStorage.getItem(cacheKey);
+    if (raw) {
+      try { applySpecialData(JSON.parse(raw)); return; } catch(e) {}
+    }
+    document.getElementById('loadingMessage').classList.remove('hidden');
+    callAPI('getSpecialStatus', { idNumber: currentUser.idNumber })
+      .then(function(res) {
+        document.getElementById('loadingMessage').classList.add('hidden');
+        if (!res.success || !res.data) return;
+        try { sessionStorage.setItem(cacheKey, JSON.stringify(res.data)); } catch(e) {}
+        applySpecialData(res.data);
       })
       .catch(function(error) {
         document.getElementById('loadingMessage').classList.add('hidden');
@@ -742,12 +788,14 @@
         return showToast('請上傳港澳生居留證或護照', 'error'), false;
     }
     if (document.getElementById('dualNationality').checked) {
-      if (!document.getElementById('secondNationality').value.trim())
+      const nat1 = document.getElementById('firstNationality').value;
+      if (!nat1) return showToast('請選擇第一國籍', 'error'), false;
+      if (nat1 === '其他' && !document.getElementById('firstNationalityOther').value.trim())
+        return showToast('請填寫第一國籍', 'error'), false;
+      const nat2 = document.getElementById('secondNationality').value;
+      if (!nat2) return showToast('請選擇第二國籍', 'error'), false;
+      if (nat2 === '其他' && !document.getElementById('secondNationalityOther').value.trim())
         return showToast('請填寫第二國籍', 'error'), false;
-      if (!document.getElementById('passport1File').files[0] && document.getElementById('passport1Link').href === location.href + '#')
-        return showToast('請上傳第一本護照封面（中華民國護照）', 'error'), false;
-      if (!document.getElementById('passport2File').files[0] && document.getElementById('passport2Link').href === location.href + '#')
-        return showToast('請上傳第二本護照封面（外國護照）', 'error'), false;
     }
     if (document.getElementById('governmentOverseas').checked) {
       if (!document.getElementById('governmentOverseasFile').files[0] && !document.querySelector('#governmentOverseasFilePreview a'))
@@ -793,19 +841,26 @@
         const nat = document.getElementById('foreignFatherNationality').value;
         formData.foreignFatherNationality = nat === '其他'
           ? document.getElementById('foreignFatherNationalityOther').value.trim() : nat;
-      } else { formData.foreignFatherNationality = ''; }
+        formData.foreignFatherTaiwanId = document.getElementById('foreignFatherTaiwanId').checked;
+      } else { formData.foreignFatherNationality = ''; formData.foreignFatherTaiwanId = false; }
 
       formData.foreignMother = document.getElementById('foreignMother').checked;
       if (formData.foreignMother) {
         const nat = document.getElementById('foreignMotherNationality').value;
         formData.foreignMotherNationality = nat === '其他'
           ? document.getElementById('foreignMotherNationalityOther').value.trim() : nat;
-      } else { formData.foreignMotherNationality = ''; }
+        formData.foreignMotherTaiwanId = document.getElementById('foreignMotherTaiwanId').checked;
+      } else { formData.foreignMotherNationality = ''; formData.foreignMotherTaiwanId = false; }
 
       formData.overseas           = document.getElementById('overseas').checked;
       formData.hongKongMacao      = document.getElementById('hongKongMacao').checked;
       formData.dualNationality    = document.getElementById('dualNationality').checked;
-      formData.secondNationality  = formData.dualNationality ? document.getElementById('secondNationality').value.trim() : '';
+      if (formData.dualNationality) {
+        const nat1 = document.getElementById('firstNationality').value;
+        formData.firstNationality = nat1 === '其他' ? document.getElementById('firstNationalityOther').value.trim() : nat1;
+        const nat2 = document.getElementById('secondNationality').value;
+        formData.secondNationality = nat2 === '其他' ? document.getElementById('secondNationalityOther').value.trim() : nat2;
+      } else { formData.firstNationality = ''; formData.secondNationality = ''; }
       formData.governmentOverseas = document.getElementById('governmentOverseas').checked;
       formData.foreignStudent     = document.getElementById('foreignStudent').checked;
       if (formData.foreignStudent) {
@@ -826,8 +881,6 @@
         { cond: formData.disabilityParent  && !isNormal, id: 'parentDisabilityFile',  key: 'parentDisabilityUrl' },
         { cond: formData.overseas        && !isNormal, id: 'overseasFile',         key: 'overseasDocUrl' },
         { cond: formData.hongKongMacao   && !isNormal, id: 'hongKongMacaoFile',    key: 'hongKongMacaoDocUrl' },
-        { cond: formData.dualNationality && !isNormal, id: 'passport1File',        key: 'passport1Url' },
-        { cond: formData.dualNationality && !isNormal, id: 'passport2File',        key: 'passport2Url' },
         { cond: formData.governmentOverseas && !isNormal, id: 'governmentOverseasFile', key: 'governmentOverseasDocUrl' },
         { cond: formData.foreignStudent  && !isNormal, id: 'foreignStudentFile',   key: 'foreignStudentDocUrl' },
         { cond: formData.mainlandChina   && !isNormal, id: 'mainlandChinaFile',    key: 'mainlandChinaDocUrl' },
@@ -846,6 +899,7 @@
         .then(function(res) {
           document.getElementById('loadingMessage').classList.add('hidden');
           if (res.success) {
+            try { sessionStorage.removeItem('ss_' + currentUser.idNumber); } catch(e) {}
             if (needsIncomeReminder) {
               showIncomeReminder();
             } else {
