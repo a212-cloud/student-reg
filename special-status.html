@@ -894,15 +894,19 @@
         }
       }
 
-      const needsIncomeReminder = !isNormal && (formData.lowIncome || formData.middleLowIncome);
+      const hasIncomeDoc = !isNormal && (formData.lowIncome || formData.middleLowIncome);
+      const hasOtherDoc = !isNormal && (formData.aboriginal || formData.disabilityStudent ||
+        formData.disabilityParent || formData.overseas || formData.hongKongMacao ||
+        formData.governmentOverseas || formData.foreignStudent || formData.mainlandChina);
+      const hasAnyDoc = hasIncomeDoc || hasOtherDoc;
 
       callAPI('saveSpecialStatus', { data: formData })
         .then(function(res) {
           document.getElementById('loadingMessage').classList.add('hidden');
           if (res.success) {
             try { sessionStorage.removeItem('ss_' + currentUser.idNumber); } catch(e) {}
-            if (needsIncomeReminder) {
-              showIncomeReminder();
+            if (hasAnyDoc) {
+              showDocReminder(hasIncomeDoc, hasOtherDoc);
             } else {
               showToast('資料儲存成功！');
               loadExistingData();
@@ -926,8 +930,12 @@
     }
   }
 
-  function showIncomeReminder() {
-    document.getElementById('incomeReminderModal').classList.remove('hidden');
+  function showDocReminder(hasIncomeDoc, hasOtherDoc) {
+    const incomeBlock = document.getElementById('docReminderIncomeBlock');
+    const otherBlock  = document.getElementById('docReminderOtherBlock');
+    if (incomeBlock) incomeBlock.classList.toggle('hidden', !hasIncomeDoc);
+    if (otherBlock)  otherBlock.classList.toggle('hidden', !hasOtherDoc);
+    document.getElementById('docReminderModal').classList.remove('hidden');
   }
 
   function showToast(message, type = 'success') {
@@ -948,19 +956,30 @@
   }
 </script>
 
-<!-- 低/中低收入戶正本繳交提醒 -->
-<div id="incomeReminderModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50">
+<!-- 證明文件紙本繳交提醒 -->
+<div id="docReminderModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50">
   <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
     <div class="flex items-center mb-4">
       <span class="text-3xl mr-3">📋</span>
       <h3 class="text-lg font-bold text-gray-800">重要提醒</h3>
     </div>
-    <div class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-lg mb-6">
-      <p class="text-orange-800 font-semibold mb-1">請務必攜帶證明正本</p>
+
+    <!-- 低/中低收入戶：需繳交正本 -->
+    <div id="docReminderIncomeBlock" class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-lg mb-3">
+      <p class="text-orange-800 font-semibold mb-1">低／中低收入戶證明 — 請攜帶正本</p>
       <p class="text-orange-700 text-sm leading-relaxed">
-        您已上傳低收入戶／中低收入戶證明文件，請於<strong>新生訓練當日</strong>攜帶該證明之<strong>正本</strong>至教務處註冊組繳交，以利辦理獎學金相關業務。
+        請於<strong>新生訓練當日</strong>攜帶低收入戶／中低收入戶證明之<strong>正本</strong>至教務處註冊組繳交，以利辦理獎學金相關業務。
       </p>
     </div>
+
+    <!-- 其他證明文件：需裝訂影本 -->
+    <div id="docReminderOtherBlock" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg mb-3">
+      <p class="text-yellow-800 font-semibold mb-1">其他特殊身份證明 — 請裝訂影本</p>
+      <p class="text-yellow-700 text-sm leading-relaxed">
+        請將相關證明文件之<strong>影本</strong>裝訂於新生個資表後方，於<strong>新生入學測驗當日</strong>繳交予學校老師。
+      </p>
+    </div>
+
     <p class="text-gray-500 text-sm mb-5">資料已儲存成功，點選「確認」後返回主選單。</p>
     <div class="text-right">
       <button onclick="handleBack()"
