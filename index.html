@@ -484,6 +484,12 @@ setInterval(updateCurrentTime, 1000);
 window.onload = function() {
   checkLoginStatus();
   updateCurrentTime();
+  // 按 Enter 觸發登入
+  ['idNumber', 'birthDate'].forEach(function(id) {
+    document.getElementById(id).addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleLogin();
+    });
+  });
 };
 </script>
 </body>
