@@ -32,37 +32,22 @@
   <script>
   (function() {
     var now = new Date();
-    var deadline = new Date(2026, 3, 26, 12, 0, 0);   // 4/26 中午12:00
-    var openDate = new Date(2026, 4, 1, 8, 0, 0);     // 5/1 上午8:00
+    var openDate = new Date(2026, 4, 1, 8, 0, 0);  // 5/1 上午8:00
     var modal = document.getElementById('nscGuideModal');
     var body  = document.getElementById('nscModalBody');
     var btns  = document.getElementById('nscModalButtons');
 
     if (now >= openDate) { modal.style.display = 'none'; return; }
 
-    if (now <= deadline) {
-      body.innerHTML =
-        '<p style="font-size:1.1rem; font-weight:700; color:#dc2626; margin-bottom:12px;">本系統尚未開放，請先至桃園市完成線上報到！</p>' +
-        '<p style="color:#374151; margin-bottom:8px; line-height:1.7;">請點下方按鈕前往<strong>桃園市新生線上報到系統</strong>完成報到手續：</p>' +
-        '<div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:12px; border-radius:4px; margin-bottom:12px;">' +
-        '  <div style="font-weight:700; color:#92400e;">報到期限：<span style="color:#dc2626;">4月26日（六）中午12:00前</span></div>' +
-        '  <div style="color:#78350f; font-size:0.9rem; margin-top:4px;">報到後請於 5/1 上午8:00 起回到本系統填寫個資。</div>' +
-        '</div>' +
-        '<p style="color:#6b7280; font-size:0.85rem;">如有疑問請洽註冊組：<strong>03-3525590 分機212</strong></p>';
-      btns.innerHTML =
-        '<a href="https://nsc.tyc.edu.tw/Web/#/" target="_blank" style="display:block; background:#16a34a; color:#fff; text-align:center; padding:14px; border-radius:8px; font-size:1.05rem; font-weight:700; text-decoration:none;">前往桃園市線上報到系統 →</a>' +
-        '<button onclick="document.getElementById(\'nscGuideModal\').style.display=\'none\'" style="background:#e5e7eb; color:#374151; padding:12px; border-radius:8px; font-size:0.95rem; border:none; cursor:pointer; font-weight:600;">我已完成報到，關閉提示視窗</button>';
-    } else {
-      body.innerHTML =
-        '<p style="font-size:1.1rem; font-weight:700; color:#1d4ed8; margin-bottom:12px;">本系統於 5/1 上午8:00 後啟用，目前尚無法登入，請稍待數日。</p>' +
-        '<div style="background:#dbeafe; border-left:4px solid #3b82f6; padding:12px; border-radius:4px; margin-bottom:12px;">' +
-        '  <div style="font-weight:700; color:#1e3a8a;">系統開放時間：<span style="color:#dc2626;">5月1日（五）上午8:00</span></div>' +
-        '  <div style="color:#1e40af; font-size:0.9rem; margin-top:4px;">屆時請再回到本系統填寫新生個資，謝謝您的耐心等候！</div>' +
-        '</div>' +
-        '<p style="color:#6b7280; font-size:0.85rem;">如有疑問請洽註冊組：<strong>03-3525590 分機212</strong></p>';
-      btns.innerHTML =
-        '<button onclick="document.getElementById(\'nscGuideModal\').style.display=\'none\'" style="background:#3b82f6; color:#fff; padding:14px; border-radius:8px; font-size:1rem; border:none; cursor:pointer; font-weight:700; width:100%;">知道了，關閉提示</button>';
-    }
+    body.innerHTML =
+      '<p style="font-size:1.1rem; font-weight:700; color:#1d4ed8; margin-bottom:12px;">目前非系統開放時間，請等 5/1 上午 8:00 後再執行。</p>' +
+      '<div style="background:#dbeafe; border-left:4px solid #3b82f6; padding:12px; border-radius:4px; margin-bottom:12px;">' +
+      '  <div style="font-weight:700; color:#1e3a8a;">系統開放時間：<span style="color:#dc2626;">5月1日（五）上午 8:00</span></div>' +
+      '  <div style="color:#1e40af; font-size:0.9rem; margin-top:4px;">屆時請回到本系統填寫新生個資，謝謝您的耐心等候！</div>' +
+      '</div>' +
+      '<p style="color:#6b7280; font-size:0.85rem;">如有疑問請洽註冊組：<strong>03-3525590 分機212</strong></p>';
+    btns.innerHTML =
+      '<button onclick="document.getElementById(\'nscGuideModal\').style.display=\'none\'" style="background:#3b82f6; color:#fff; padding:14px; border-radius:8px; font-size:1rem; border:none; cursor:pointer; font-weight:700; width:100%;">知道了，關閉提示</button>';
 
     modal.style.display = 'flex';
   })();
