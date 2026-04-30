@@ -417,10 +417,11 @@ function showMainSection(prefetchedData) {
 // 使用 1.5 秒延遲，等主畫面渲染完再開始，不影響登入速度
 function prewarmModuleCaches(idNumber) {
   setTimeout(function() {
-    ['getSpecialStatus', 'getDetailedClassInfo', 'getStudentPhoto', 'getBankInfo', 'getPersonalInfo']
+    ['getSpecialStatus', 'getStudentPhoto', 'getBankInfo', 'getPersonalInfo']
       .forEach(function(action) {
         callAPI(action, { idNumber: idNumber }).catch(function() {});
       });
+    callAPI('getDetailedClassInfo', { idNumber: idNumber, markViewed: false }).catch(function() {});
   }, 1500);
 }
 
